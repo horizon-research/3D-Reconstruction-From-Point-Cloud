@@ -137,7 +137,7 @@ int main() {
 			{
 				b = atof(str.c_str());                   
 				str.clear ( );  
-        points.push_back(Point(x, y, z, nx, ny, nz, r, g, b));
+        		points.push_back(Point(x, y, z, nx, ny, nz, r, g, b));
 				counter++;     
 			}
 			pos++;    
@@ -273,7 +273,7 @@ int main() {
 			{
 				b = atof(str.c_str());                   
 				str.clear ( );  
-        vertices.push_back(Point(x, y, z, nx, ny, nz, r, g, b, u, v));
+        		vertices.push_back(Point(x, y, z, nx, ny, nz, r, g, b, u, v));
 				counter++;     
 			}
 			pos++;    
@@ -304,7 +304,7 @@ int main() {
   int ver[4];
   int i = 1;
   Point v1, v2, v3;
-	counter = 0;    
+  counter = 0;    
   pos = 0;
 	/*畫Polygon*/  
 	while ( !fin2.eof ( ) )
@@ -341,35 +341,17 @@ int main() {
         v1 = vertices[ver[1]];
         v2 = vertices[ver[2]];
         v3 = vertices[ver[3]];
-        for(int index = 0; index < 3; index++){
+        for(int index = 1; index <= 3; index++){
 
           //store the vertex of triangle
-          pt.put("x", vertices[ver[index]].x());
-          pt.put("y", vertices[ver[index]].y());
-          pt.put("z", vertices[ver[index]].z());
-          pt.put("nx", vertices[ver[index]].nx());
-          pt.put("ny", vertices[ver[index]].ny());
-          pt.put("nz", vertices[ver[index]].nz());
-          pt.put("r", vertices[ver[index]].r());
-          pt.put("g", vertices[ver[index]].g());
-          pt.put("b", vertices[ver[index]].b());
-          pt.put("u", vertices[ver[index]].u());
-          pt.put("v", vertices[ver[index]].v());
-          triangle.push_back(std::make_pair("",pt));
+          pt.put("v", vertices[ver[index]].detailWithUV());
+          triangle.push_back(std::make_pair("", pt));
 
           //look for points near vertex
           K_neighbor_search search(tree, vertices[ver[index]], K);
           for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
-            pts.put("x", (it->first).x());
-            pts.put("y", (it->first).y());
-            pts.put("z", (it->first).z());
-            pts.put("nx", (it->first).nx());
-            pts.put("ny", (it->first).ny());
-            pts.put("nz", (it->first).nz());
-            pts.put("r", (it->first).r());
-            pts.put("g", (it->first).g());
-            pts.put("b", (it->first).b());
-            ptList.push_back(std::make_pair("",pts));
+            pts.put("p", (it->first).detail());
+            ptList.push_back(std::make_pair("", pts));
           }
         }
         single.add_child("triangle", triangle);
@@ -406,6 +388,7 @@ int main() {
   //   std::cout << " d(q, nearest neighbor)=  " << (it->first).x()
 	//       << tr_dist.inverse_of_transformed_distance(it->second) << std::endl;
   // }
+
 
   // // Display points read
   for (std::size_t i = 0; i < 3; ++ i)
