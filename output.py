@@ -2,8 +2,11 @@ import cv2
 import json
 import math
 import numpy as np
-from numpy import linalg as LA
+
 from datetime import datetime
+from numpy import linalg as LA
+from scipy.spatial import Delaunay
+
 
 # https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
 def computeBarycentricCoordinate(triangle, point):
@@ -128,6 +131,21 @@ def triangleSplitting(triangle, triangleColors, points, pointColors):
                 break
     #print()
     return triangles, trianglesColors
+    
+def triangulation(points, pointColors):
+    delaunay = Delaunay(points)
+    triangles = []
+    trianglesColors = []
+    for triangleIndices in delaunay.simplices:
+        triangle = []
+        triangleColors = []
+        for i in triangleIndices:
+            triangle.append(points[i])
+            triangleColors.append(pointColors[i])
+        triangles.append(triangle)
+        trianglesColors.append(triangleColors)
+    return triangles, trianglesColors
+    
             
 def isPointInTriangle(triangle, point):
     bc = computeBarycentricCoordinate(triangle, point)
@@ -271,7 +289,13 @@ for t in data:
         triangulationStartTime = datetime.now()
         
         # Triangulation
-        triangulated, trianglatedColors = triangleSplitting(triangleUVs, triangleColors, ptsInTriImgCoords, ptsInTriColors)
+        triangulationPts = []
+        triangulationPts.extend(triangleUVs)
+        triangulationPts.extend(ptsInTriImgCoords)
+        triangulationPtsColors = []
+        triangulationPtsColors.extend(triangleColors)
+        triangulationPtsColors.extend(ptsInTriColors)
+        triangulated, trianglatedColors = triangulation(triangulationPts, triangulationPtsColors)
         #print("Triangulated Length:\n", len(triangulated))
         #print("Triangulated Colors Length:\n", len(trianglatedColors))
         for t in range(len(triangulated)):
