@@ -20,7 +20,7 @@ If no errors, press G to generate, then press Q to quit
 
 ```make```
 
-#### Step 4: Run! 
+#### Step 3: Run! 
 
 ```./pointsTransfer```
 
