@@ -1,6 +1,7 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/point_generators_3.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
+#include <CGAL/Real_timer.h>
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
 
@@ -46,6 +47,8 @@ int main(int argc, char** argv){
     const unsigned int K = 20; // Search range
 
     CGAL::Timer task_timer; task_timer.start();
+//    CGAL::Real_timer real_task_timer; real_task_timer.start();
+    CGAL::Real_timer real_total_timer; real_total_timer.start();
 
     // Read original point set
     std::ifstream pc_file_stream(pc_file_name, std::ios_base::in); // Open point cloud file
@@ -422,6 +425,8 @@ int main(int argc, char** argv){
     std::cout << "Writing output cost: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
+    std::cout << "Total real time: " << real_total_timer.time() << " seconds" << std::endl;
+    real_total_timer.reset();
 
 //    // search K nearest neighbours
 //    K_neighbor_search search(tree, vertices[0], K);
