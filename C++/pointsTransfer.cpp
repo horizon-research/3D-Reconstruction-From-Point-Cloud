@@ -1,7 +1,7 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/point_generators_3.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
-#include "Point.h"  // defines types Point, Construct_coord_iterator
+#include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
 
 #include <utility>
@@ -23,120 +23,144 @@ typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterat
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
 typedef K_neighbor_search::Tree Tree;
 
-int main() {
-  const int N = 1000;
-  const unsigned int K = 20; //the number of search range
+int main(int argc, char** argv){
+    
+    // Parse filenames from argument
+    std::string usage_str = "Usage: ./pointTransfer <input-point-cloud> <input-mesh>";
+    std::string pc_file_name = "";
+    std::string mesh_file_name = "";
+    
+    
+    if(argc < 3)
+    {
+        std::cout << usage_str << std::endl;
+        return 0;
+    }
+    else
+    {
+        pc_file_name = argv[1];
+        mesh_file_name = argv[2];
+    }
+    
+    const int N = 1000;
+    const unsigned int K = 20; // Search range
 
-  CGAL::Timer task_timer; task_timer.start();
+    CGAL::Timer task_timer; task_timer.start();
 
-  //Read origin point set
-  std::vector<Point> points; 
-  std::string file_name = "data/RRLibStatueWithNormalX.ply";
-  std::ifstream fin ( file_name, std::ios_base::in );//開檔 
+    // Read original point set
+    std::ifstream pc_file_stream(pc_file_name, std::ios_base::in); // Open point cloud file
 
- 
-	if ( !fin.is_open ( ) )
+	if(!pc_file_stream.is_open())
 	{ 
-		std::cout << "Cannot read the file." << std::endl;
-		std::cout << "Please check again." << std::endl;
-		exit(0);
-        }
- 
+		std::cerr << "Cannot read or find point cloud file: " << pc_file_name << std::endl;
+		return 0;
+    }
+    
 	std::string str;
-	int numberOfPoints;
+    
+    std::vector<Point> points;
+	int point_count;
 	char ch;
- /*讀取header*/
-
-	while ( !fin.eof ( ) )
+    
+    // Read header
+	while(!pc_file_stream.eof())
 	{
-		fin.get ( ch );
-		if( ch != ' ' && ch != '\t' && ch != '\n' )
+		pc_file_stream.get(ch);
+		if(ch != ' ' && ch != '\t' && ch != '\n')
 		{
-			str.push_back ( ch );   
+			str.push_back(ch);
 		}
-		else
-		{
-		//取得vertex個數 
+        else
+        {
+            // Get vertex count
 			if(str == "vertex")
 			{
-				str.clear ( );
-				getline ( fin, str, '\n' ); 
-				numberOfPoints = atoi(str.c_str());       
-      }
-			else if(str == "end_header")
-			{
-				str.clear ( );     
+				str.clear();
+				getline(pc_file_stream, str, '\n');
+				point_count = atoi(str.c_str());
+            }
+            else if(str == "end_header")
+            {
+				str.clear();
 				break;     
 			}
-			else
-				str.clear ( );             
-		}
-  } 
+            else
+            {
+                str.clear();
+            }
+        }
+    }
 
-  std::cerr << "the size of points is: " << numberOfPoints << std::endl;
+    std::cout << "Point count: " << point_count << std::endl;
 
-  int pos = 0;
+    int pos = 0;
 	int counter = 0;
-	double x , y, z, nx, ny, nz;
-  int r, g, b;
+	double x, y, z, nx, ny, nz;
+    int r, g, b;
  
-	/*讀取Vertex*/ 
-	while ( !fin.eof ( ) )
+	// Read vertices
+	while (!pc_file_stream.eof())
 	{
-		fin.get ( ch );
-		if( ch != ' ' && ch != '\t' && ch != '\n' )
-			str.push_back ( ch );
- 
-		else
+		pc_file_stream.get(ch);
+        if(ch != ' ' && ch != '\t' && ch != '\n')
+        {
+			str.push_back(ch);
+        }
+        else
 		{ 
-			if(counter == numberOfPoints)	break;  
-			/*儲存vertex資料*/
-			if(str == "")	continue;
- 
-			else if(pos%9 == 0)
+            if(counter == point_count)
+            {
+                break;
+            }
+			// Save vertex data
+            if(str == "")
+            {
+                continue;
+            }
+			else if(pos % 9 == 0)
 			{
 				x = atof(str.c_str());              
-				str.clear ( );        
+				str.clear();
 			}
-			else if(pos%9 == 1)
+			else if(pos % 9 == 1)
 			{
 				y = atof(str.c_str());                    
-				str.clear ( );      
+				str.clear();
 			}
-			else if(pos%9 == 2)
+			else if(pos % 9 == 2)
 			{
 				z = atof(str.c_str());                   
-				str.clear ( );     
+				str.clear();
 			}
-      else if(pos%9 == 3)
+            else if(pos % 9 == 3)
 			{
 				nx = atof(str.c_str());                   
-				str.clear ( );   
+				str.clear();
 			}
-      else if(pos%9 == 4)
+            else if(pos % 9 == 4)
 			{
 				ny = atof(str.c_str());                   
-				str.clear ( );   
+				str.clear();
 			}
-      else if(pos%9 == 5)
+            else if(pos % 9 == 5)
 			{
 				nz = atof(str.c_str());                   
-				str.clear ( );     
+				str.clear();
 			}
-      else if(pos%9 == 6)
+            else if(pos % 9 == 6)
 			{
 				r = atof(str.c_str());                   
-				str.clear ( );      
+				str.clear();
 			}
-      else if(pos%9 == 7)
+            else if(pos % 9 == 7)
 			{
 				g = atof(str.c_str());                   
-				str.clear ( );    
+				str.clear();
 			}
-      else if(pos%9 == 8)
+            else if(pos % 9 == 8)
 			{
 				b = atof(str.c_str());                   
-				str.clear ( );  
+				str.clear();
         		points.push_back(Point(x, y, z, nx, ny, nz, r, g, b));
 				counter++;     
 			}
@@ -144,135 +168,146 @@ int main() {
 		}   
 	}
 
-  std::cerr << "Reads origin point set " << file_name << ": " << points.size() << " points, "
-                                                         << task_timer.time() << " seconds"
-                                                         << std::endl;
-  task_timer.reset();
+    std::cout << "Read point set cost: " << task_timer.time() << " seconds" << std::endl;
+    task_timer.reset();
 
     // Insert number_of_data_points in the tree
-  Tree tree(points.begin(), points.end());
-  Distance tr_dist;
+    Tree tree(points.begin(), points.end());
+    Distance tr_dist;
 
-  std::cerr << "Build Kd tree cost: " << task_timer.time() << " seconds" << std::endl;
-  task_timer.reset();
+    std::cout << "Build Kd tree cost: " << task_timer.time() << " seconds" << std::endl;
+    task_timer.reset();
 
-  fin.close();  
+    pc_file_stream.close();
 
-  //Read mesh and vertice
-  std::vector<Point> vertices; 
-  std::string file_name2 = "data/125KWithUV.ply";
-  std::ifstream fin2 ( file_name2, std::ios_base::in );//開檔 
+    //Read mesh and vertices
+    std::ifstream mesh_file_stream(mesh_file_name, std::ios_base::in); // Open mesh file
 
-  int vertex, face;
- /*讀取header*/
- 
-	while ( !fin2.eof ( ) )
+    if(!mesh_file_stream.is_open())
+    {
+        std::cerr << "Cannot read or find mesh file: " << mesh_file_name << std::endl;
+        return 0;
+    }
+    
+    std::vector<Point> vertices;
+    int vertex_count, face_count;
+   
+    // Read header
+	while(!mesh_file_stream.eof())
 	{
-		fin2.get ( ch );
-		if( ch != ' ' && ch != '\t' && ch != '\n' )
+		mesh_file_stream.get(ch);
+		if(ch != ' ' && ch != '\t' && ch != '\n')
 		{
-			str.push_back ( ch );   
+			str.push_back(ch);
 		}
 		else
 		{
-		//取得vertex個數 
+		    // Get vertex count
 			if(str == "vertex")
 			{
-				str.clear ( );
-				getline ( fin2, str, '\n' ); 
-				vertex = atoi(str.c_str());       
+				str.clear();
+				getline(mesh_file_stream, str, '\n');
+				vertex_count = atoi(str.c_str());
 			}
-		//取得face個數 
+            // Get face count
 			else if(str == "face")
 			{
-				str.clear ( );
-				getline ( fin2, str, '\n' );  
-				face = atoi(str.c_str());             
+				str.clear();
+				getline(mesh_file_stream, str, '\n');
+				face_count = atoi(str.c_str());
 			}
 			else if(str == "end_header")
 			{
-				str.clear ( );     
+				str.clear();
 				break;     
 			}
-			else
-				str.clear ( );             
+            else
+            {
+                str.clear();
+            }
 		}
 	} 
 
-  std::cerr << "the size of vertices is: " << vertex << std::endl;
-  std::cerr << "the size of face is: " << face << std::endl;
+    std::cout << "Vertex count: " << vertex_count << std::endl;
+    std::cout << "Face count: " << face_count << std::endl;
 
-  pos = 0;
+    pos = 0;
 	counter = 0;
 	double u,v;
  
-	/*讀取Vertex*/ 
-	while ( !fin2.eof ( ) )
+	// Read vertices
+	while(!mesh_file_stream.eof())
 	{
-    if(counter == vertex)	break;  
-		fin2.get ( ch );
-		if( ch != ' ' && ch != '\t' && ch != '\n' )
-			str.push_back ( ch );
- 
+        if(counter == vertex_count)
+        {
+            break;
+        }
+		mesh_file_stream.get(ch);
+        if(ch != ' ' && ch != '\t' && ch != '\n')
+        {
+            str.push_back(ch);
+        }
 		else
 		{ 
-			/*儲存vertex資料*/
-			if(str == "")	continue;
- 
-			else if(pos%11 == 0)
+			// Save vertex data
+            if(str == "")
+            {
+                continue;
+            }
+			else if(pos % 11 == 0)
 			{
 				x = atof(str.c_str());              
-				str.clear ( );        
+				str.clear();
 			}
-			else if(pos%11 == 1)
+			else if(pos % 11 == 1)
 			{
 				y = atof(str.c_str());                    
-				str.clear ( );      
+				str.clear();
 			}
-			else if(pos%11 == 2)
+			else if(pos % 11 == 2)
 			{
 				z = atof(str.c_str());                   
-				str.clear ( );     
+				str.clear();
 			}
-      else if(pos%11 == 3)
+            else if(pos % 11 == 3)
 			{
 				nx = atof(str.c_str());                   
-				str.clear ( );   
+				str.clear();
 			}
-      else if(pos%11 == 4)
+            else if(pos % 11 == 4)
 			{
 				ny = atof(str.c_str());                   
-				str.clear ( );   
+				str.clear();
 			}
-      else if(pos%11 == 5)
+            else if(pos % 11 == 5)
 			{
 				nz = atof(str.c_str());                   
-				str.clear ( );     
+				str.clear();
 			}
-      else if(pos%11 == 6)
+            else if(pos % 11 == 6)
 			{
 				u = atof(str.c_str());                   
-				str.clear ( );      
+				str.clear();
 			}
-      else if(pos%11 == 7)
+            else if(pos % 11 == 7)
 			{
 				v = atof(str.c_str());                   
-				str.clear ( );    
+				str.clear();
 			}
-      else if(pos%11 == 8)
+            else if(pos % 11 == 8)
 			{
 				r = atof(str.c_str());                   
-				str.clear ( );    
+				str.clear();
 			}
-      else if(pos%11 == 9)
+            else if(pos % 11 == 9)
 			{
 				g = atof(str.c_str());                   
-				str.clear ( );    
+				str.clear();
 			}
-      else if(pos%11 == 10)
+            else if(pos % 11 == 10)
 			{
 				b = atof(str.c_str());                   
-				str.clear ( );  
+				str.clear();
         		vertices.push_back(Point(x, y, z, nx, ny, nz, r, g, b, u, v));
 				counter++;     
 			}
@@ -280,97 +315,103 @@ int main() {
 		}   
 	}
 
-  std::cout<< counter << std::endl;
+    // boost::property_tree::ptree pt, output, child1, ans;
+    // child1.put("sd", "sdf");
+    // pt.push_back(std::make_pair("", child1));
+    // pt.push_back(std::make_pair("", child1));
+    // pt.push_back(std::make_pair("", child1));
+    // pt.push_back(std::make_pair("", child1));
+    // for(int index = 0; index < 2; index++){
+    //   output.push_back(std::make_pair("", pt));
+    // }
+    // ans.add_child("res", output);
+    // child1.put("sd", "---");
 
-  // boost::property_tree::ptree pt, output, child1, ans;
-  // child1.put("sd", "sdf");
-  // pt.push_back(std::make_pair("", child1));
-  // pt.push_back(std::make_pair("", child1));
-  // pt.push_back(std::make_pair("", child1));
-  // pt.push_back(std::make_pair("", child1));
-  // for(int index = 0; index < 2; index++){
-  //   output.push_back(std::make_pair("", pt));
-  // }
-  // ans.add_child("res", output);
-  // child1.put("sd", "---");
+    // std::stringstream ss;
+    // boost::property_tree::json_parser::write_json(ss, ans);
+    // std::cout << ss.str() << std::endl;
 
-  // std::stringstream ss;
-  // boost::property_tree::json_parser::write_json(ss, ans);
-  // std::cout << ss.str() << std::endl;
+    boost::property_tree::ptree pt, triangle, pts, ptList, single, data, output;
 
-
-  boost::property_tree::ptree pt, triangle, pts, ptList, single, data, output;
-
-  int ver[4];
-  int i = 1;
-  Point v1, v2, v3;
-  counter = 0;    
-  pos = 0;
-	/*畫Polygon*/  
-	while ( !fin2.eof ( ) )
+    int ver[4];
+    int i = 1;
+    Point v1, v2, v3;
+    counter = 0;
+    pos = 0;
+	// Read faces
+	while(!mesh_file_stream.eof())
 	{
-    if(counter == face)		break;  
-		fin2.get ( ch );
-    // std::cout<< ch << std::endl;
-		if( ch != ' ' && ch != '\t' && ch != '\n' )
-			str.push_back ( ch );
+        if(counter == face_count)
+        {
+            break;
+        }
+		mesh_file_stream.get(ch);
+        if(ch != ' ' && ch != '\t' && ch != '\n')
+        {
+            str.push_back(ch);
+        }
 		else
 		{
-      if(str == "")	continue; 
-      else if(pos%4 == 0)
+            if(str == "")
+            {
+                continue;
+            }
+            else if(pos % 4 == 0)
 			{
 				ver[0] = atof(str.c_str());              
-				str.clear ( );        
+				str.clear();
 			}
-			else if(pos%4 == 1)
+			else if(pos % 4 == 1)
 			{
 				ver[1] = atof(str.c_str());                    
 				str.clear ( );      
 			}
-			else if(pos%4 == 2)
+			else if(pos % 4 == 2)
 			{
 				ver[2] = atof(str.c_str());                   
-				str.clear ( );     
+				str.clear();
 			}
-      else if(pos%4 == 3)
+            else if(pos % 4 == 3)
 			{
 				ver[3] = atof(str.c_str());                   
-				str.clear ( );     
-        counter++; 
+				str.clear();
+            
+                counter++;
         
-        v1 = vertices[ver[1]];
-        v2 = vertices[ver[2]];
-        v3 = vertices[ver[3]];
-        for(int index = 1; index <= 3; index++){
+                v1 = vertices[ver[1]];
+                v2 = vertices[ver[2]];
+                v3 = vertices[ver[3]];
+                
+                for(int index = 1; index <= 3; index++){
+                    // Store the vertices of the triangle
+                    pt.put("v", vertices[ver[index]].detailWithUV());
+                    triangle.push_back(std::make_pair("", pt));
 
-          //store the vertex of triangle
-          pt.put("v", vertices[ver[index]].detailWithUV());
-          triangle.push_back(std::make_pair("", pt));
-
-          //look for points near vertex
-          K_neighbor_search search(tree, vertices[ver[index]], K);
-          for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
-            pts.put("p", (it->first).detail());
-            ptList.push_back(std::make_pair("", pts));
-          }
+                    // Look for points near the vertices
+                    K_neighbor_search search(tree, vertices[ver[index]], K);
+                    for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
+                        pts.put("p", (it->first).detail());
+                        ptList.push_back(std::make_pair("", pts));
+                    }
+                }
+                
+                single.add_child("triangle", triangle);
+                triangle.clear();
+                single.add_child("points", ptList);
+                ptList.clear();
+                data.push_back(std::make_pair("",single));
+                single.clear();
+            }
+            pos++;
         }
-        single.add_child("triangle", triangle);
-        triangle.clear();
-        single.add_child("points", ptList);
-        ptList.clear();
-        data.push_back(std::make_pair("",single));
-        single.clear();
-			}    
-      pos++;    
-		}
 	}
-    fin2.close();    
+    mesh_file_stream.close();
+    
     output.add_child("data", data);
 
-    std::cerr << "Search near points cost: " << task_timer.time() << " seconds" << std::endl;
+    std::cout << "Search near points cost: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
-
-
+    
     std::stringstream ss;
     boost::property_tree::json_parser::write_json(ss, output);
     std::ofstream outFile;
@@ -378,26 +419,25 @@ int main() {
     outFile << ss.str();
     outFile.close();
 
-    std::cerr << "Writing output cost: " << task_timer.time() << " seconds" << std::endl;
+    std::cout << "Writing output cost: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
 
-  // // search K nearest neighbours
-  // K_neighbor_search search(tree, vertices[0], K);
-  // for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
-  //   std::cout << " d(q, nearest neighbor)=  " << (it->first).x()
-	//       << tr_dist.inverse_of_transformed_distance(it->second) << std::endl;
-  // }
+//    // search K nearest neighbours
+//    K_neighbor_search search(tree, vertices[0], K);
+//    for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
+//        std::cout << " d(q, nearest neighbor)=  " << (it->first).x()
+//                  << tr_dist.inverse_of_transformed_distance(it->second) << std::endl;
+//    }
 
+//    // Display points read
+//    for (std::size_t i = 0; i < 3; ++ i)
+//    {
+//      const double x = points[i].x();
+//      const double y = points[i].y();
+//      const double z = points[i].z();
+//      std::cerr << "Point (" << x << "  " << y << " "<< z << ") "<< std::endl;
+//    }
 
-  // // Display points read
-  for (std::size_t i = 0; i < 3; ++ i)
-    {
-      const double x = points[i].x();
-      const double y = points[i].y();
-      const double z = points[i].z();                                                                                                                                                                                                                                                                                                                                             
-      std::cerr << "Point (" << x << "  " << y << " "<< z << ") "<< std::endl;
-    }
-
-  return 0;
+    return 0;
 }
