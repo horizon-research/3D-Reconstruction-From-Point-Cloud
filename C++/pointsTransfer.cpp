@@ -1,7 +1,10 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/point_generators_3.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
+#include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
+#include <CGAL/Memory_sizer.h>
+
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
 
@@ -10,7 +13,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <CGAL/Timer.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -30,7 +32,6 @@ int main(int argc, char** argv){
     std::string usage_str = "Usage: ./pointTransfer <input-point-cloud> <input-mesh>";
     std::string pc_file_name = "";
     std::string mesh_file_name = "";
-    
     
     if(argc < 3)
     {
@@ -427,6 +428,9 @@ int main(int argc, char** argv){
 
     std::cout << "Total real time: " << real_total_timer.time() << " seconds" << std::endl;
     real_total_timer.reset();
+    
+    std::cout << "VIRT: " << (CGAL::Memory_sizer().virtual_size() >> 20)  << " MiB" << std::endl;
+    std::cout << "RES:  " << (CGAL::Memory_sizer().resident_size() >> 20) << " MiB" << std::endl;
 
 //    // search K nearest neighbours
 //    K_neighbor_search search(tree, vertices[0], K);
