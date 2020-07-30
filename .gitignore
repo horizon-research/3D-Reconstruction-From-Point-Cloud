@@ -1,3 +1,12 @@
+**/.DS_Store
+
 *.json
 *.png
+*.ply
+
+C++/CMakeCache.txt
+C++/CMakeFiles
+C++/cmake_install.cmake
+C++/Makefile
+C++/pointsTransfer
 

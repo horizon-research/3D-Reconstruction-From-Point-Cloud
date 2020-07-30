@@ -1,12 +1,10 @@
 # 3D-Reconstruction-From-Point-Cloud
 
+### How to compile pointsTransfer.cpp with CmakeList (in ```C++/```)
 
+#### Step 1: Create cmake files
 
-### How to compile pointsTransfer.cpp with CmakeList:
-
-#### Step 1: to create cmake files
-
-Cmd: ccmake **.** 
+```ccmake .``` 
 
 Then you get empty cache page to modify settings.
 
@@ -18,23 +16,13 @@ Press C to configure ==> set  **boost_DIR** (/usr/local/Cellar/boost@1.60/1.60.0
 
 If no errors, press G to generate, then press Q to quit
 
+#### Step 2: Compile
 
+```make```
 
-#### Step 2: to create make files
+#### Step 3: Run! 
 
-Cmd: cmake .
-
-
-
-#### Step 3: to compile
-
-Cmd: make
-
-
-
-#### Step 4: run 
-
-Cmd: ./pointsTransfer
+```./pointsTransfer```
 
 
 
