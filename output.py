@@ -247,12 +247,11 @@ for t in data:
     # Rasterization
     if len(points) == 0:
         directRasterizationStartTime = datetime.now()
-    
+        
         triangleRasterization(triangleUVs, triangleColors, colorMap, normalMap)
         
         totalDirectRasterizationTime += (datetime.now() - directRasterizationStartTime).total_seconds()
     else:
-    
         pointsRotationStartTime = datetime.now()
         
         # Rotate points
@@ -286,31 +285,39 @@ for t in data:
                 
         totalPointsInTriangleTime += (datetime.now() - pointsInTriangleStartTime).total_seconds()
         
-        triangulationStartTime = datetime.now()
+        if len(ptsInTriImgCoords) == 0:
+            directRasterizationStartTime = datetime.now()
+            
+            triangleRasterization(triangleUVs, triangleColors, colorMap, normalMap)
+            
+            totalDirectRasterizationTime += (datetime.now() - directRasterizationStartTime).total_seconds()
         
-        # Triangulation
-        triangulationPts = []
-        triangulationPts.extend(triangleUVs)
-        triangulationPts.extend(ptsInTriImgCoords)
-        triangulationPtsColors = []
-        triangulationPtsColors.extend(triangleColors)
-        triangulationPtsColors.extend(ptsInTriColors)
-        triangulated, trianglatedColors = triangulation(triangulationPts, triangulationPtsColors)
-        #print("Triangulated Length:\n", len(triangulated))
-        #print("Triangulated Colors Length:\n", len(trianglatedColors))
-        for t in range(len(triangulated)):
-            # Ceiling and cap to resolution
-            tInt = np.ceil(triangulated[t])
-            #print("triangle UVs:\n", triangleUVs)
-            #print("tInt at t:\n", tInt, t)
-            for i in range(len(tInt)):
-                for j in range(len(tInt[i])):
-                    if tInt[i][j] >= resolution:
-                        tInt[i][j] = resolution - 1
-            triangleRasterization(tInt, trianglatedColors[t], colorMap, normalMap)
-        #print()
-        
-        totalTriangulationTime += (datetime.now() - triangulationStartTime).total_seconds()
+        else:
+            triangulationStartTime = datetime.now()
+            
+            # Triangulation
+            triangulationPts = []
+            triangulationPts.extend(triangleUVs)
+            triangulationPts.extend(ptsInTriImgCoords)
+            triangulationPtsColors = []
+            triangulationPtsColors.extend(triangleColors)
+            triangulationPtsColors.extend(ptsInTriColors)
+            triangulated, trianglatedColors = triangulation(triangulationPts, triangulationPtsColors)
+            #print("Triangulated Length:\n", len(triangulated))
+            #print("Triangulated Colors Length:\n", len(trianglatedColors))
+            for t in range(len(triangulated)):
+                # Ceiling and cap to resolution
+                tInt = np.ceil(triangulated[t])
+                #print("triangle UVs:\n", triangleUVs)
+                #print("tInt at t:\n", tInt, t)
+                for i in range(len(tInt)):
+                    for j in range(len(tInt[i])):
+                        if tInt[i][j] >= resolution:
+                            tInt[i][j] = resolution - 1
+                triangleRasterization(tInt, trianglatedColors[t], colorMap, normalMap)
+            #print()
+            
+            totalTriangulationTime += (datetime.now() - triangulationStartTime).total_seconds()
         
     totalRasterizationTime += (datetime.now() - rasterizationStartTime).total_seconds()
         
