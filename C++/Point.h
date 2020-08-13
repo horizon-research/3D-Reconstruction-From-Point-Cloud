@@ -82,12 +82,11 @@ struct Point {
 
     bool operator!=(const Point& p) const { return ! (*this == p); }
     
-    Point_3 getPoint3() const
+    CGAL::Point_3<CGAL::Simple_cartesian<double>> get_point_3() const
     {
-        return Point_3 point3(x(), y(), z());
+        return CGAL::Point_3<CGAL::Simple_cartesian<double>> (x(), y(), z());
     }
-    
-}; //end of class
+}; //end of struct
 
 struct Construct_coord_iterator {
     typedef  const double* result_type;

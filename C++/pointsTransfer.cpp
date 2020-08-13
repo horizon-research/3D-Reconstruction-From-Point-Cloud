@@ -1,5 +1,8 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/point_generators_3.h>
+#include <CGAL/Triangle_3.h>
+#include <CGAL/Plane_3.h>
+#include <CGAL/Simple_cartesian.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
@@ -24,6 +27,9 @@ typedef CGAL::Counting_iterator<Random_points_iterator> N_Random_points_iterator
 typedef CGAL::Dimension_tag<3> D;
 typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D> Traits;
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
+typedef CGAL::Point_3<CGAL::Simple_cartesian<double>> Point_3;
+typedef CGAL::Triangle_3<CGAL::Simple_cartesian<double>> Triangle_3;
+typedef CGAL::Plane_3<CGAL::Simple_cartesian<double>> Plane_3;
 typedef K_neighbor_search::Tree Tree;
 
 int main(int argc, char** argv){
@@ -319,7 +325,7 @@ int main(int argc, char** argv){
 
     counter = 0;
     pos = 0;
-    Point triangle[3];
+    Point triangle_vertices[3];
 	// Read faces
 	while(!mesh_file_stream.eof())
 	{
@@ -346,51 +352,70 @@ int main(int argc, char** argv){
 			}
 			else if(pos % 4 == 1)
 			{
-				triangle[0] = vertices[atof(str.c_str())];
+				triangle_vertices[0] = vertices[atof(str.c_str())];
 				str.clear();
 			}
 			else if(pos % 4 == 2)
 			{
-				triangle[1] = vertices[atof(str.c_str())];
+				triangle_vertices[1] = vertices[atof(str.c_str())];
 				str.clear();
 			}
             else if(pos % 4 == 3)
 			{
-				triangle[2] = vertices[atof(str.c_str())];
+				triangle_vertices[2] = vertices[atof(str.c_str())];
 				str.clear();
                 
                 counter++;
-
-                // Print triangle
-                std::cout << "Triangle:" << std::endl;
-                for(int i = 0; i < 3; i++)
-                {
-                    std::cout << triangle[i].detail() << std::endl;
-                }
-                
-                // Print found neighbors
-                std::cout << "Neighbors found:" << std::endl;
                 
                 // Find nearest points to the triangle
                 std::set<Point, point_set_comparator> neighbors;
                 for(int i = 0; i < 3; i++)
                 {
-                    K_neighbor_search search(tree, triangle[i], K);
+                    K_neighbor_search search(tree, triangle_vertices[i], K);
                     for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++)
                     {
                         neighbors.insert(it->first);
                     }
-                    std::cout << std::endl;
                 }
                 
-                // Find rotation of triangle to up around centroid
+                // Create CGAL Triangle_3
+                Point_3 r = triangle_vertices[0].get_point_3();
+                Point_3 p = triangle_vertices[1].get_point_3();
+                Point_3 q = triangle_vertices[2].get_point_3();
+                Triangle_3 triangle(r, p, q);
+                
+                std::cout << "Triangle:" << std::endl;
+                std::cout << triangle << std::endl;
+                
+                // Find triangle centroid
+                Point_3 centroid = CGAL::centroid(triangle);
+                
+                // Create CGAL Plane_3 of triangle vertices
+                Plane_3 plane(r, p, q);
+                
+                std::cout << "Neighbors:" << std::endl;
                 
                 // For each neighboring point
                 for(auto it = neighbors.begin(); it != neighbors.end(); it++)
                 {
+                    // Get neighboring point
+                    Point n_point = *it;
                     
+                    // Get CGAL Point_3 of point
+                    Point_3 n_point_3 = n_point.get_point_3();
+                    
+                    std::cout << "Point:" << std::endl;
+                    std::cout << n_point_3 << std::endl;
+                    
+                    // Find orthogonal projection of point onto plane
+                    Point_3 n_proj_point_3 = plane.projection(n_point_3);
+                    
+                    // Print the projection
+                    std::cout << "Projected:" << std::endl;
+                    std::cout << n_proj_point_3 << std::endl;
                 }
                 
+                std::cout << std::endl;
             }
             pos++;
         }
