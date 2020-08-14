@@ -1,5 +1,6 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/point_generators_3.h>
+#include <CGAL/Point_2.h>
 #include <CGAL/Triangle_3.h>
 #include <CGAL/Plane_3.h>
 #include <CGAL/Simple_cartesian.h>
@@ -27,6 +28,7 @@ typedef CGAL::Counting_iterator<Random_points_iterator> N_Random_points_iterator
 typedef CGAL::Dimension_tag<3> D;
 typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D> Traits;
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
+typedef CGAL::Point_2<CGAL::Simple_cartesian<double>> Point_2;
 typedef CGAL::Point_3<CGAL::Simple_cartesian<double>> Point_3;
 typedef CGAL::Triangle_3<CGAL::Simple_cartesian<double>> Triangle_3;
 typedef CGAL::Plane_3<CGAL::Simple_cartesian<double>> Plane_3;
@@ -393,6 +395,18 @@ int main(int argc, char** argv){
                 // Create CGAL Plane_3 of triangle vertices
                 Plane_3 plane(r, p, q);
                 
+                // Triangle to 2D?
+                Point_2 r_2 = plane.to_2d(r);
+                Point_2 p_2 = plane.to_2d(p);
+                Point_2 q_2 = plane.to_2d(q);
+                std::cout << r_2 << std::endl;
+                std::cout << p_2 << std::endl;
+                std::cout << q_2 << std::endl;
+                // Transform back to 3D?
+                std::cout << plane.to_3d(r_2) << std::endl;
+                std::cout << plane.to_3d(p_2) << std::endl;
+                std::cout << plane.to_3d(q_2) << std::endl;
+                
                 std::cout << "Neighbors:" << std::endl;
                 
                 // For each neighboring point
@@ -413,6 +427,8 @@ int main(int argc, char** argv){
                     // Print the projection
                     std::cout << "Projected:" << std::endl;
                     std::cout << n_proj_point_3 << std::endl;
+                    
+                    
                 }
                 
                 std::cout << std::endl;
