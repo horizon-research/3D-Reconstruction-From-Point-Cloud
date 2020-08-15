@@ -1,10 +1,14 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/point_generators_3.h>
+#include <CGAL/Orthogonal_k_neighbor_search.h>
+
+#include <CGAL/Simple_cartesian.h>
+
 #include <CGAL/Point_2.h>
 #include <CGAL/Triangle_3.h>
 #include <CGAL/Plane_3.h>
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Orthogonal_k_neighbor_search.h>
+#include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
+
 #include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
 #include <CGAL/Memory_sizer.h>
@@ -18,21 +22,23 @@
 #include <iostream>
 #include <string>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/optional.hpp>
-
 typedef CGAL::Creator_uniform_3<double,Point> Point_creator;
 typedef CGAL::Random_points_in_cube_3<Point, Point_creator> Random_points_iterator;
 typedef CGAL::Counting_iterator<Random_points_iterator> N_Random_points_iterator;
 typedef CGAL::Dimension_tag<3> D;
 typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D> Traits;
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
-typedef CGAL::Point_2<CGAL::Simple_cartesian<double>> Point_2;
-typedef CGAL::Point_3<CGAL::Simple_cartesian<double>> Point_3;
-typedef CGAL::Triangle_3<CGAL::Simple_cartesian<double>> Triangle_3;
-typedef CGAL::Plane_3<CGAL::Simple_cartesian<double>> Plane_3;
 typedef K_neighbor_search::Tree Tree;
+
+typedef CGAL::Simple_cartesian<double> Kernel;
+
+typedef Kernel::FT Scalar;
+
+typedef CGAL::Point_2<Kernel> Point_2;
+typedef CGAL::Point_3<Kernel> Point_3;
+typedef CGAL::Triangle_3<Kernel> Triangle_3;
+typedef CGAL::Plane_3<Kernel> Plane_3;
+typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> Triangle_coordinates;
 
 int main(int argc, char** argv){
     
@@ -384,30 +390,19 @@ int main(int argc, char** argv){
                 Point_3 r = triangle_vertices[0].get_point_3();
                 Point_3 p = triangle_vertices[1].get_point_3();
                 Point_3 q = triangle_vertices[2].get_point_3();
-                Triangle_3 triangle(r, p, q);
-                
-                std::cout << "Triangle:" << std::endl;
-                std::cout << triangle << std::endl;
-                
-                // Find triangle centroid
-                Point_3 centroid = CGAL::centroid(triangle);
                 
                 // Create CGAL Plane_3 of triangle vertices
                 Plane_3 plane(r, p, q);
                 
-                // Triangle to 2D?
+                // Triangle to 2D
                 Point_2 r_2 = plane.to_2d(r);
                 Point_2 p_2 = plane.to_2d(p);
                 Point_2 q_2 = plane.to_2d(q);
-                std::cout << r_2 << std::endl;
-                std::cout << p_2 << std::endl;
-                std::cout << q_2 << std::endl;
-                // Transform back to 3D?
-                std::cout << plane.to_3d(r_2) << std::endl;
-                std::cout << plane.to_3d(p_2) << std::endl;
-                std::cout << plane.to_3d(q_2) << std::endl;
+                Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
                 
-                std::cout << "Neighbors:" << std::endl;
+                // Save points that are in the triangle
+                std::vector<Point> ptsInTriangle;
+                std::vector<std::vector<Scalar>> ptsBCInTriangle;
                 
                 // For each neighboring point
                 for(auto it = neighbors.begin(); it != neighbors.end(); it++)
@@ -418,20 +413,26 @@ int main(int argc, char** argv){
                     // Get CGAL Point_3 of point
                     Point_3 n_point_3 = n_point.get_point_3();
                     
-                    std::cout << "Point:" << std::endl;
-                    std::cout << n_point_3 << std::endl;
-                    
                     // Find orthogonal projection of point onto plane
                     Point_3 n_proj_point_3 = plane.projection(n_point_3);
                     
-                    // Print the projection
-                    std::cout << "Projected:" << std::endl;
-                    std::cout << n_proj_point_3 << std::endl;
+                    // Projected point to 2D
+                    Point_2 n_point_2 = plane.to_2d(n_proj_point_3);
                     
+                    // Compute Barycentric Coordinate
+                    std::vector<Scalar> bc;
+                    triangle_coordinates(n_point_2, bc);
+                    
+                    // Check if point in triangle
+                    if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
+                    {
+                        // Add point
+                        ptsInTriangle.push_back(n_point);
+                        ptsBCInTriangle.push_back(bc);
+                    }
+                 
                     
                 }
-                
-                std::cout << std::endl;
             }
             pos++;
         }
