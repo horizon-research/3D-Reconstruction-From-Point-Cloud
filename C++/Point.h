@@ -1,5 +1,3 @@
-#include <CGAL/Point_3.h>
-
 struct Point {
     double ver[3];
     double normal[3];
@@ -81,11 +79,7 @@ struct Point {
     }
 
     bool operator!=(const Point& p) const { return ! (*this == p); }
-    
-    CGAL::Point_3<CGAL::Simple_cartesian<double>> get_point_3() const
-    {
-        return CGAL::Point_3<CGAL::Simple_cartesian<double>> (x(), y(), z());
-    }
+
 }; //end of struct
 
 struct Construct_coord_iterator {

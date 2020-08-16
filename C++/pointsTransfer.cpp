@@ -1,13 +1,16 @@
 #include <CGAL/Search_traits.h>
-#include <CGAL/point_generators_3.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 
 #include <CGAL/Simple_cartesian.h>
 
 #include <CGAL/Point_2.h>
+#include <CGAL/Point_3.h>
 #include <CGAL/Triangle_3.h>
 #include <CGAL/Plane_3.h>
 #include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Triangulation_2.h>
 
 #include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
@@ -22,9 +25,6 @@
 #include <iostream>
 #include <string>
 
-typedef CGAL::Creator_uniform_3<double,Point> Point_creator;
-typedef CGAL::Random_points_in_cube_3<Point, Point_creator> Random_points_iterator;
-typedef CGAL::Counting_iterator<Random_points_iterator> N_Random_points_iterator;
 typedef CGAL::Dimension_tag<3> D;
 typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D> Traits;
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
@@ -39,6 +39,15 @@ typedef CGAL::Point_3<Kernel> Point_3;
 typedef CGAL::Triangle_3<Kernel> Triangle_3;
 typedef CGAL::Plane_3<Kernel> Plane_3;
 typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> Triangle_coordinates;
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Triangulation_2<K> Triangulation;
+typedef Triangulation::Point Triangulation_Point;
+
+Point_3 point_to_point_3(Point &p)
+{
+    return Point_3 (p.x(), p.y(), p.z());
+}
 
 int main(int argc, char** argv){
     
@@ -386,15 +395,13 @@ int main(int argc, char** argv){
                     }
                 }
                 
-                // Create CGAL Triangle_3
-                Point_3 r = triangle_vertices[0].get_point_3();
-                Point_3 p = triangle_vertices[1].get_point_3();
-                Point_3 q = triangle_vertices[2].get_point_3();
-                
                 // Create CGAL Plane_3 of triangle vertices
+                Point_3 r = point_to_point_3(triangle_vertices[0]);
+                Point_3 p = point_to_point_3(triangle_vertices[1]);
+                Point_3 q = point_to_point_3(triangle_vertices[2]);
                 Plane_3 plane(r, p, q);
                 
-                // Triangle to 2D
+                // Triangle vertices to 2D
                 Point_2 r_2 = plane.to_2d(r);
                 Point_2 p_2 = plane.to_2d(p);
                 Point_2 q_2 = plane.to_2d(q);
@@ -403,6 +410,7 @@ int main(int argc, char** argv){
                 // Save points that are in the triangle
                 std::vector<Point> ptsInTriangle;
                 std::vector<std::vector<Scalar>> ptsBCInTriangle;
+                std::vector<Triangulation_Point> ptsForTriangulation;
                 
                 // For each neighboring point
                 for(auto it = neighbors.begin(); it != neighbors.end(); it++)
@@ -411,7 +419,7 @@ int main(int argc, char** argv){
                     Point n_point = *it;
                     
                     // Get CGAL Point_3 of point
-                    Point_3 n_point_3 = n_point.get_point_3();
+                    Point_3 n_point_3 = point_to_point_3(n_point);
                     
                     // Find orthogonal projection of point onto plane
                     Point_3 n_proj_point_3 = plane.projection(n_point_3);
@@ -429,8 +437,24 @@ int main(int argc, char** argv){
                         // Add point
                         ptsInTriangle.push_back(n_point);
                         ptsBCInTriangle.push_back(bc);
+                        ptsForTriangulation.push_back(Triangulation_Point(n_point_2.x(), n_point_2.y()));
                     }
-                 
+                }
+                
+                // If there are no points in triangle
+                if(ptsInTriangle.size() == 0)
+                {
+                    // Draw triangle
+                    
+                }
+                // Else triangulate
+                else
+                {
+                    Triangulation t;
+                    t.insert(Triangulation_Point(r_2.x(), r_2.y()));
+                    t.insert(Triangulation_Point(p_2.x(), p_2.y()));
+                    t.insert(Triangulation_Point(q_2.x(), q_2.y()));
+                    t.insert(ptsForTriangulation.begin(), ptsForTriangulation.end());
                     
                 }
             }
