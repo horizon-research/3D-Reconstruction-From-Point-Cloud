@@ -1,15 +1,12 @@
 #include <CGAL/Search_traits.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 
-#include <CGAL/Simple_cartesian.h>
-
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <CGAL/Point_2.h>
 #include <CGAL/Point_3.h>
 #include <CGAL/Triangle_3.h>
 #include <CGAL/Plane_3.h>
 #include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Triangulation_2.h>
 
 #include <CGAL/Timer.h>
@@ -30,19 +27,16 @@ typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterat
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
 typedef K_neighbor_search::Tree Tree;
 
-typedef CGAL::Simple_cartesian<double> Kernel;
-
+typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
 typedef Kernel::FT Scalar;
-
 typedef CGAL::Point_2<Kernel> Point_2;
 typedef CGAL::Point_3<Kernel> Point_3;
 typedef CGAL::Triangle_3<Kernel> Triangle_3;
 typedef CGAL::Plane_3<Kernel> Plane_3;
 typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> Triangle_coordinates;
-
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Triangulation_2<K> Triangulation;
-typedef Triangulation::Point Triangulation_Point;
+typedef CGAL::Triangulation_2<Kernel> Triangulation;
+typedef Triangulation::Finite_vertices_iterator Finite_vertices_iterator;
+typedef Triangulation::Finite_faces_iterator Finite_faces_iterator;
 
 Point_3 point_to_point_3(Point &p)
 {
@@ -408,9 +402,9 @@ int main(int argc, char** argv){
                 Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
                 
                 // Save points that are in the triangle
-                std::vector<Point> ptsInTriangle;
-                std::vector<std::vector<Scalar>> ptsBCInTriangle;
-                std::vector<Triangulation_Point> ptsForTriangulation;
+                std::vector<Point> pts_in_tri;
+                std::vector<std::vector<Scalar>> pts_bc_in_tri;
+                std::vector<Point_2> pts_2d_in_tri;
                 
                 // For each neighboring point
                 for(auto it = neighbors.begin(); it != neighbors.end(); it++)
@@ -435,29 +429,43 @@ int main(int argc, char** argv){
                     if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
                     {
                         // Add point
-                        ptsInTriangle.push_back(n_point);
-                        ptsBCInTriangle.push_back(bc);
-                        ptsForTriangulation.push_back(Triangulation_Point(n_point_2.x(), n_point_2.y()));
+                        pts_in_tri.push_back(n_point);
+                        pts_bc_in_tri.push_back(bc);
+                        pts_2d_in_tri.push_back(n_point_2);
                     }
                 }
                 
                 // If there are no points in triangle
-                if(ptsInTriangle.size() == 0)
+                if(pts_2d_in_tri.size() == 0)
                 {
                     // Draw triangle
-                    
+                    std::cout << "Direct rasterization" << std::endl;
                 }
                 // Else triangulate
                 else
                 {
-                    Triangulation t;
-                    t.insert(Triangulation_Point(r_2.x(), r_2.y()));
-                    t.insert(Triangulation_Point(p_2.x(), p_2.y()));
-                    t.insert(Triangulation_Point(q_2.x(), q_2.y()));
-                    t.insert(ptsForTriangulation.begin(), ptsForTriangulation.end());
+                    std::cout << "Triangulation" << std::endl;
                     
+                    Triangulation t;
+                    t.insert(r_2);
+                    t.insert(p_2);
+                    t.insert(q_2);
+                    t.insert(pts_2d_in_tri.begin(), pts_2d_in_tri.end());
+                    
+                    std::cout << "Vertices" << std::endl;
+                    for(Finite_vertices_iterator it = t.finite_vertices_begin(); it != t.finite_vertices_end(); it++)
+                    {
+                        std::cout << it->point() << std::endl;
+                    }
+                    
+                    std::cout << "Faces" << std::endl;
+                    for(Finite_faces_iterator it = t.finite_faces_begin(); it != t.finite_faces_end(); it++)
+                    {
+                        std::cout << t.triangle(it) << std::endl;
+                    }
                 }
             }
+            std::cout << std::endl;
             pos++;
         }
 	}
