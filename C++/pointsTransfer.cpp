@@ -7,7 +7,9 @@
 #include <CGAL/Triangle_3.h>
 #include <CGAL/Plane_3.h>
 #include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
-#include <CGAL/Triangulation_2.h>
+
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
 
 #include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
@@ -22,21 +24,25 @@
 #include <iostream>
 #include <string>
 
-typedef CGAL::Dimension_tag<3> D;
-typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D> Traits;
-typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
-typedef K_neighbor_search::Tree Tree;
+typedef CGAL::Dimension_tag<3>                                                          D;
+typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D>  Traits;
+typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance>                            K_neighbor_search;
+typedef K_neighbor_search::Tree                                                         Tree;
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
-typedef Kernel::FT Scalar;
-typedef CGAL::Point_2<Kernel> Point_2;
-typedef CGAL::Point_3<Kernel> Point_3;
-typedef CGAL::Triangle_3<Kernel> Triangle_3;
-typedef CGAL::Plane_3<Kernel> Plane_3;
-typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> Triangle_coordinates;
-typedef CGAL::Triangulation_2<Kernel> Triangulation;
-typedef Triangulation::Finite_vertices_iterator Finite_vertices_iterator;
-typedef Triangulation::Finite_faces_iterator Finite_faces_iterator;
+typedef CGAL::Exact_predicates_exact_constructions_kernel   Kernel;
+typedef Kernel::FT                                          Scalar;
+
+typedef CGAL::Point_2<Kernel>                                           Point_2;
+typedef CGAL::Point_3<Kernel>                                           Point_3;
+typedef CGAL::Triangle_3<Kernel>                                        Triangle_3;
+typedef CGAL::Plane_3<Kernel>                                           Plane_3;
+typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel>   Triangle_coordinates;
+
+typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel>       Vertex_base;
+typedef CGAL::Triangulation_data_structure_2<Vertex_base>                       Triangulation_data_structure;
+typedef CGAL::Delaunay_triangulation_2<Kernel, Triangulation_data_structure>    Delaunay;
+typedef Delaunay::Finite_vertices_iterator                                      Finite_vertices_iterator;
+typedef Delaunay::Finite_faces_iterator                                         Finite_faces_iterator;
 
 Point_3 point_to_point_3(Point &p)
 {
@@ -401,12 +407,18 @@ int main(int argc, char** argv){
                 Point_2 q_2 = plane.to_2d(q);
                 Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
                 
+                // Save points for triangulation
+                std::vector<std::pair<Point_2, unsigned>> triangulation_pts;
+                triangulation_pts.push_back(std::make_pair(r_2, 0));
+                triangulation_pts.push_back(std::make_pair(p_2, 1));
+                triangulation_pts.push_back(std::make_pair(q_2, 2));
+                
                 // Save points that are in the triangle
                 std::vector<Point> pts_in_tri;
                 std::vector<std::vector<Scalar>> pts_bc_in_tri;
-                std::vector<Point_2> pts_2d_in_tri;
                 
                 // For each neighboring point
+                int triangulation_index = 3;
                 for(auto it = neighbors.begin(); it != neighbors.end(); it++)
                 {
                     // Get neighboring point
@@ -431,41 +443,39 @@ int main(int argc, char** argv){
                         // Add point
                         pts_in_tri.push_back(n_point);
                         pts_bc_in_tri.push_back(bc);
-                        pts_2d_in_tri.push_back(n_point_2);
+                        triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
                     }
                 }
                 
                 // If there are no points in triangle
-                if(pts_2d_in_tri.size() == 0)
+                if(triangulation_pts.size() == 3)
                 {
                     // Draw triangle
-                    std::cout << "Direct rasterization" << std::endl;
                 }
                 // Else triangulate
                 else
                 {
-                    std::cout << "Triangulation" << std::endl;
+                    Delaunay delaunay;
+                    delaunay.insert(triangulation_pts.begin(), triangulation_pts.end());
                     
-                    Triangulation t;
-                    t.insert(r_2);
-                    t.insert(p_2);
-                    t.insert(q_2);
-                    t.insert(pts_2d_in_tri.begin(), pts_2d_in_tri.end());
+                    std::cout << "Triangulation:" << std::endl;
                     
-                    std::cout << "Vertices" << std::endl;
-                    for(Finite_vertices_iterator it = t.finite_vertices_begin(); it != t.finite_vertices_end(); it++)
+                    std::cout << "Vertices:" << std::endl;
+                    for(Finite_vertices_iterator it = delaunay.finite_vertices_begin(); it != delaunay.finite_vertices_end(); it++)
                     {
-                        std::cout << it->point() << std::endl;
+                        std::cout << it->info() << ":\t" << it->point() << std::endl;
                     }
                     
-                    std::cout << "Faces" << std::endl;
-                    for(Finite_faces_iterator it = t.finite_faces_begin(); it != t.finite_faces_end(); it++)
+                    std::cout << "Faces:" << std::endl;
+                    for(Finite_faces_iterator it = delaunay.finite_faces_begin(); it != delaunay.finite_faces_end(); it++)
                     {
-                        std::cout << t.triangle(it) << std::endl;
+                        std::cout << delaunay.triangle(it) << std::endl;
+                        std::cout << it->vertex(0)->info() << "\t" << it->vertex(1)->info() << "\t" << it->vertex(2)->info() << "\t" << std::endl;
                     }
+                    
+                    std::cout << std::endl;
                 }
             }
-            std::cout << std::endl;
             pos++;
         }
 	}
