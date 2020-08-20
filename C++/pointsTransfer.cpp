@@ -11,6 +11,8 @@
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
+#include <CGAL/bounding_box.h>
+
 #include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
 #include <CGAL/Memory_sizer.h>
@@ -49,6 +51,24 @@ Point_3 point_to_point_3(Point &p)
     return Point_3 (p.x(), p.y(), p.z());
 }
 
+void draw_triangle(Point triangle[], int resolution)
+{
+    Point_2 img_coords[3];
+    for(int i = 0; i < 3; i++)
+    {
+        std::cout << "UV: " << triangle[i].u() << " " << triangle[i].v() << std::endl;
+        img_coords[i] = Point_2(triangle[i].u() * resolution, triangle[i].v() * resolution);
+        std::cout << "Image Coord: " << img_coords[i] << std::endl;
+    }
+    
+    // Compute axis-aligned bounding box
+    Kernel::Iso_rectangle_2 bb = CGAL::bounding_box(std::begin(img_coords), std::end(img_coords));
+    std::cout << "Bounding box: " << bb << std::endl;
+    
+    // Triangle Rasterization
+    
+}
+
 int main(int argc, char** argv){
     
     // Parse filenames from argument
@@ -69,6 +89,7 @@ int main(int argc, char** argv){
     
     const int N = 1000;
     const unsigned int K = 20; // Search range
+    const int RESOLUTION = 8192;
 
     CGAL::Timer task_timer; task_timer.start();
     CGAL::Real_timer real_total_timer; real_total_timer.start();
@@ -451,6 +472,7 @@ int main(int argc, char** argv){
                 if(triangulation_pts.size() == 3)
                 {
                     // Draw triangle
+                    draw_triangle(triangle_vertices, RESOLUTION);
                 }
                 // Else triangulate
                 else
@@ -458,22 +480,36 @@ int main(int argc, char** argv){
                     Delaunay delaunay;
                     delaunay.insert(triangulation_pts.begin(), triangulation_pts.end());
                     
-                    std::cout << "Triangulation:" << std::endl;
-                    
-                    std::cout << "Vertices:" << std::endl;
-                    for(Finite_vertices_iterator it = delaunay.finite_vertices_begin(); it != delaunay.finite_vertices_end(); it++)
-                    {
-                        std::cout << it->info() << ":\t" << it->point() << std::endl;
-                    }
-                    
-                    std::cout << "Faces:" << std::endl;
+                    // For each face
                     for(Finite_faces_iterator it = delaunay.finite_faces_begin(); it != delaunay.finite_faces_end(); it++)
                     {
-                        std::cout << delaunay.triangle(it) << std::endl;
-                        std::cout << it->vertex(0)->info() << "\t" << it->vertex(1)->info() << "\t" << it->vertex(2)->info() << "\t" << std::endl;
+                        Point triangle[3];
+                        for(int i = 0; i < 3; i++)
+                        {
+                            int index = it->vertex(i)->info();
+                            switch (index) {
+                                case 0:
+                                    triangle[i] = triangle_vertices[0];
+                                    break;
+                                case 1:
+                                    triangle[i] = triangle_vertices[1];
+                                    break;
+                                case 2:
+                                    triangle[i] = triangle_vertices[2];
+                                    break;
+                                default:
+                                    Point pt = pts_in_tri[index-3];
+                                    std::vector<Scalar> pt_bc = pts_bc_in_tri[index-3];
+                                    // Compute UV
+                                    pt.U = CGAL::to_double(pt_bc[0]) * triangle_vertices[0].u() + CGAL::to_double(pt_bc[1]) * triangle_vertices[1].u() + CGAL::to_double(pt_bc[2]) * triangle_vertices[2].u();
+                                    pt.V = CGAL::to_double(pt_bc[0]) * triangle_vertices[0].v() + CGAL::to_double(pt_bc[1]) * triangle_vertices[1].v() + CGAL::to_double(pt_bc[2]) * triangle_vertices[2].v();
+                                    triangle[i] = pt;
+                                    break;
+                            }
+                        }
+                        // Draw Triangle
+                        draw_triangle(triangle, RESOLUTION);
                     }
-                    
-                    std::cout << std::endl;
                 }
             }
             pos++;
