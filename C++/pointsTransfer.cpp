@@ -56,9 +56,7 @@ void draw_triangle(Point triangle[], int resolution)
     Point_2 img_coords[3];
     for(int i = 0; i < 3; i++)
     {
-        std::cout << "UV: " << triangle[i].u() << " " << triangle[i].v() << std::endl;
         img_coords[i] = Point_2(triangle[i].u() * resolution, triangle[i].v() * resolution);
-        std::cout << "Image Coord: " << img_coords[i] << std::endl;
     }
     
     // Compute axis-aligned bounding box
@@ -66,7 +64,33 @@ void draw_triangle(Point triangle[], int resolution)
     std::cout << "Bounding box: " << bb << std::endl;
     
     // Triangle Rasterization
-    
+    // For each pixel in bounding box
+    for(int i = (int)std::floor(CGAL::to_double(bb.xmin())); i < std::floor(CGAL::to_double(bb.xmax())); i++)
+    {
+        for(int j = (int)std::floor(CGAL::to_double(bb.ymin())); i < std::floor(CGAL::to_double(bb.ymax())); i++)
+        {
+            int x = i;
+            int y = j;
+            // Boundary check
+            if(x >= resolution){ x = resolution - 1; }
+            if(y >= resolution){ y = resolution - 1; }
+            
+            // Compute barycentric coordiates
+            Triangle_coordinates triangle_coordinates(img_coords[0], img_coords[1], img_coords[2]);
+            std::vector<Scalar> bc;
+            triangle_coordinates(Point_2(x,y), bc);
+            
+            // If in triangle
+            if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
+            {
+                // Compute pixel color
+                float r = CGAL::to_double(bc[0]) * triangle[0].r() + CGAL::to_double(bc[1]) * triangle[1].r() + CGAL::to_double(bc[2]) * triangle[2].r();
+                float g = CGAL::to_double(bc[0]) * triangle[0].g() + CGAL::to_double(bc[1]) * triangle[1].g() + CGAL::to_double(bc[2]) * triangle[2].g();
+                float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
+                
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv){
