@@ -11,6 +11,9 @@ endif()
 # Find CGAL
 find_package(CGAL REQUIRED)
 
+# Find OpenCV
+find_package(OpenCV REQUIRED)
+
 # Add make clean
 add_custom_target(cleanup
    COMMAND ${CMAKE_COMMAND} -P cleanup.cmake
@@ -18,4 +21,4 @@ add_custom_target(cleanup
 
 # Add Executable
 add_executable(pointsTransfer pointsTransfer.cpp)
-target_link_libraries(pointsTransfer CGAL::CGAL)
+target_link_libraries(pointsTransfer CGAL::CGAL ${OpenCV_LIBS})

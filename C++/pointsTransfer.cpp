@@ -17,6 +17,8 @@
 #include <CGAL/Real_timer.h>
 #include <CGAL/Memory_sizer.h>
 
+#include <opencv2/core/core.hpp>
+
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
 
@@ -51,7 +53,7 @@ Point_3 point_to_point_3(Point &p)
     return Point_3 (p.x(), p.y(), p.z());
 }
 
-void draw_triangle(Point triangle[], int resolution)
+void draw_triangle(Point triangle[], int resolution, Mat texture)
 {
     Point_2 img_coords[3];
     for(int i = 0; i < 3; i++)
@@ -61,7 +63,6 @@ void draw_triangle(Point triangle[], int resolution)
     
     // Compute axis-aligned bounding box
     Kernel::Iso_rectangle_2 bb = CGAL::bounding_box(std::begin(img_coords), std::end(img_coords));
-    std::cout << "Bounding box: " << bb << std::endl;
     
     // Triangle Rasterization
     // For each pixel in bounding box
@@ -114,6 +115,9 @@ int main(int argc, char** argv){
     const int N = 1000;
     const unsigned int K = 20; // Search range
     const int RESOLUTION = 8192;
+    
+    // Output image
+    cv::Mat texture(RESOLUTION, RESOLUTION, CV_8UC3);
 
     CGAL::Timer task_timer; task_timer.start();
     CGAL::Real_timer real_total_timer; real_total_timer.start();
@@ -496,7 +500,7 @@ int main(int argc, char** argv){
                 if(triangulation_pts.size() == 3)
                 {
                     // Draw triangle
-                    draw_triangle(triangle_vertices, RESOLUTION);
+                    draw_triangle(triangle_vertices, RESOLUTION, texture);
                 }
                 // Else triangulate
                 else
@@ -532,7 +536,7 @@ int main(int argc, char** argv){
                             }
                         }
                         // Draw Triangle
-                        draw_triangle(triangle, RESOLUTION);
+                        draw_triangle(triangle, RESOLUTION, texture);
                     }
                 }
             }
