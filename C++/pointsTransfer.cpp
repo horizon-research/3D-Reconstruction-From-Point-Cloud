@@ -18,6 +18,7 @@
 #include <CGAL/Memory_sizer.h>
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
@@ -48,12 +49,15 @@ typedef CGAL::Delaunay_triangulation_2<Kernel, Triangulation_data_structure>    
 typedef Delaunay::Finite_vertices_iterator                                      Finite_vertices_iterator;
 typedef Delaunay::Finite_faces_iterator                                         Finite_faces_iterator;
 
+typedef cv::Mat     Mat;
+typedef cv::Vec4b   Vec4b;
+
 Point_3 point_to_point_3(Point &p)
 {
     return Point_3 (p.x(), p.y(), p.z());
 }
 
-void draw_triangle(Point triangle[], int resolution, Mat texture)
+void draw_triangle(Point triangle[], int resolution, Mat *texture)
 {
     Point_2 img_coords[3];
     for(int i = 0; i < 3; i++)
@@ -66,9 +70,9 @@ void draw_triangle(Point triangle[], int resolution, Mat texture)
     
     // Triangle Rasterization
     // For each pixel in bounding box
-    for(int i = (int)std::floor(CGAL::to_double(bb.xmin())); i < std::floor(CGAL::to_double(bb.xmax())); i++)
+    for(int i = (int)std::floor(CGAL::to_double(bb.xmin())); i <= std::floor(CGAL::to_double(bb.xmax())); i++)
     {
-        for(int j = (int)std::floor(CGAL::to_double(bb.ymin())); i < std::floor(CGAL::to_double(bb.ymax())); i++)
+        for(int j = (int)std::floor(CGAL::to_double(bb.ymin())); j <= std::floor(CGAL::to_double(bb.ymax())); j++)
         {
             int x = i;
             int y = j;
@@ -88,7 +92,12 @@ void draw_triangle(Point triangle[], int resolution, Mat texture)
                 float r = CGAL::to_double(bc[0]) * triangle[0].r() + CGAL::to_double(bc[1]) * triangle[1].r() + CGAL::to_double(bc[2]) * triangle[2].r();
                 float g = CGAL::to_double(bc[0]) * triangle[0].g() + CGAL::to_double(bc[1]) * triangle[1].g() + CGAL::to_double(bc[2]) * triangle[2].g();
                 float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
-                
+
+                // Set Pixel
+                texture->at<Vec4b>(j,i)[0] = b;
+                texture->at<Vec4b>(j,i)[1] = g;
+                texture->at<Vec4b>(j,i)[2] = r;
+                texture->at<Vec4b>(j,i)[3] = 255;
             }
         }
     }
@@ -115,9 +124,6 @@ int main(int argc, char** argv){
     const int N = 1000;
     const unsigned int K = 20; // Search range
     const int RESOLUTION = 8192;
-    
-    // Output image
-    cv::Mat texture(RESOLUTION, RESOLUTION, CV_8UC3);
 
     CGAL::Timer task_timer; task_timer.start();
     CGAL::Real_timer real_total_timer; real_total_timer.start();
@@ -388,6 +394,9 @@ int main(int argc, char** argv){
 			pos++;    
 		}   
 	}
+    
+    // Output image
+    Mat texture(RESOLUTION, RESOLUTION, CV_8UC4);
 
     counter = 0;
     pos = 0;
@@ -500,7 +509,7 @@ int main(int argc, char** argv){
                 if(triangulation_pts.size() == 3)
                 {
                     // Draw triangle
-                    draw_triangle(triangle_vertices, RESOLUTION, texture);
+                    draw_triangle(triangle_vertices, RESOLUTION, &texture);
                 }
                 // Else triangulate
                 else
@@ -536,7 +545,7 @@ int main(int argc, char** argv){
                             }
                         }
                         // Draw Triangle
-                        draw_triangle(triangle, RESOLUTION, texture);
+                        draw_triangle(triangle, RESOLUTION, &texture);
                     }
                 }
             }
@@ -549,7 +558,13 @@ int main(int argc, char** argv){
     task_timer.reset();
     
     // Output
+    // Split into channels
+    Mat bgra[4];
+    split(texture, bgra);
+    // Create Dilate Kernel
     
+    // Write Image
+    cv::imwrite("texture.png", texture);
     std::cout << "Output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
