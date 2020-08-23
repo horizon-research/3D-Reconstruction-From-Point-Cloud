@@ -94,10 +94,10 @@ void draw_triangle(Point triangle[], int resolution, Mat *texture)
                 float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
 
                 // Set Pixel
-                texture->at<Vec4b>(j,i)[0] = b;
-                texture->at<Vec4b>(j,i)[1] = g;
-                texture->at<Vec4b>(j,i)[2] = r;
-                texture->at<Vec4b>(j,i)[3] = 255;
+                texture->at<Vec4b>(resolution - j, i)[0] = b;
+                texture->at<Vec4b>(resolution - j, i)[1] = g;
+                texture->at<Vec4b>(resolution - j, i)[2] = r;
+                texture->at<Vec4b>(resolution - j, i)[3] = 255;
             }
         }
     }
