@@ -19,6 +19,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include "opencv2/imgproc/imgproc.hpp"
 
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
@@ -558,13 +559,28 @@ int main(int argc, char** argv){
     task_timer.reset();
     
     // Output
-    // Split into channels
+    // Create dilate kernel
+    Mat dilate_kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(25, 25));
+    // Dilate Image
+    Mat dilated;
+    dilate(texture, dilated, dilate_kernel);
+    // Split into 4 channels
     Mat bgra[4];
     split(texture, bgra);
-    // Create Dilate Kernel
-    
+    // Create alpha mask
+    Mat all_alpha;
+    Mat alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
+    merge(alphas, 4, all_alpha);
+    Mat alpha_mask;
+    bitwise_not(all_alpha, alpha_mask);
+    // Extract dilated edges
+    Mat edges;
+    bitwise_and(dilated, alpha_mask, edges);
+    // Append edges to original
+    Mat padded;
+    add(texture, edges, padded);
     // Write Image
-    cv::imwrite("texture.png", texture);
+    cv::imwrite("texture.png", padded);
     std::cout << "Output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
