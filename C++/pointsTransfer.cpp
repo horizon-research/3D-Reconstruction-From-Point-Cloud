@@ -1,7 +1,25 @@
 #include <CGAL/Search_traits.h>
-#include <CGAL/point_generators_3.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
+
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Point_2.h>
+#include <CGAL/Point_3.h>
+#include <CGAL/Triangle_3.h>
+#include <CGAL/Plane_3.h>
+#include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
+
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Delaunay_triangulation_2.h>
+
+#include <CGAL/bounding_box.h>
+
+#include <CGAL/Timer.h>
 #include <CGAL/Real_timer.h>
+#include <CGAL/Memory_sizer.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
 
@@ -10,19 +28,80 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <CGAL/Timer.h>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/optional.hpp>
+typedef CGAL::Dimension_tag<3>                                                          D;
+typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D>  Traits;
+typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance>                            K_neighbor_search;
+typedef K_neighbor_search::Tree                                                         Tree;
 
-typedef CGAL::Creator_uniform_3<double,Point> Point_creator;
-typedef CGAL::Random_points_in_cube_3<Point, Point_creator> Random_points_iterator;
-typedef CGAL::Counting_iterator<Random_points_iterator> N_Random_points_iterator;
-typedef CGAL::Dimension_tag<3> D;
-typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D> Traits;
-typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance> K_neighbor_search;
-typedef K_neighbor_search::Tree Tree;
+typedef CGAL::Exact_predicates_exact_constructions_kernel   Kernel;
+typedef Kernel::FT                                          Scalar;
+
+typedef CGAL::Point_2<Kernel>                                           Point_2;
+typedef CGAL::Point_3<Kernel>                                           Point_3;
+typedef CGAL::Triangle_3<Kernel>                                        Triangle_3;
+typedef CGAL::Plane_3<Kernel>                                           Plane_3;
+typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel>   Triangle_coordinates;
+
+typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel>       Vertex_base;
+typedef CGAL::Triangulation_data_structure_2<Vertex_base>                       Triangulation_data_structure;
+typedef CGAL::Delaunay_triangulation_2<Kernel, Triangulation_data_structure>    Delaunay;
+typedef Delaunay::Finite_vertices_iterator                                      Finite_vertices_iterator;
+typedef Delaunay::Finite_faces_iterator                                         Finite_faces_iterator;
+
+typedef cv::Mat     Mat;
+typedef cv::Vec4b   Vec4b;
+
+Point_3 point_to_point_3(Point &p)
+{
+    return Point_3 (p.x(), p.y(), p.z());
+}
+
+void draw_triangle(Point triangle[], int resolution, Mat *texture)
+{
+    Point_2 img_coords[3];
+    for(int i = 0; i < 3; i++)
+    {
+        img_coords[i] = Point_2(triangle[i].u() * resolution, triangle[i].v() * resolution);
+    }
+    
+    // Compute axis-aligned bounding box
+    Kernel::Iso_rectangle_2 bb = CGAL::bounding_box(std::begin(img_coords), std::end(img_coords));
+    
+    // Triangle Rasterization
+    // For each pixel in bounding box
+    for(int i = (int)std::floor(CGAL::to_double(bb.xmin())); i <= std::floor(CGAL::to_double(bb.xmax())); i++)
+    {
+        for(int j = (int)std::floor(CGAL::to_double(bb.ymin())); j <= std::floor(CGAL::to_double(bb.ymax())); j++)
+        {
+            int x = i;
+            int y = j;
+            // Boundary check
+            if(x >= resolution){ x = resolution - 1; }
+            if(y >= resolution){ y = resolution - 1; }
+            
+            // Compute barycentric coordiates
+            Triangle_coordinates triangle_coordinates(img_coords[0], img_coords[1], img_coords[2]);
+            std::vector<Scalar> bc;
+            triangle_coordinates(Point_2(x,y), bc);
+            
+            // If in triangle
+            if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
+            {
+                // Compute pixel color
+                float r = CGAL::to_double(bc[0]) * triangle[0].r() + CGAL::to_double(bc[1]) * triangle[1].r() + CGAL::to_double(bc[2]) * triangle[2].r();
+                float g = CGAL::to_double(bc[0]) * triangle[0].g() + CGAL::to_double(bc[1]) * triangle[1].g() + CGAL::to_double(bc[2]) * triangle[2].g();
+                float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
+
+                // Set Pixel
+                texture->at<Vec4b>(resolution - j, i)[0] = b;
+                texture->at<Vec4b>(resolution - j, i)[1] = g;
+                texture->at<Vec4b>(resolution - j, i)[2] = r;
+                texture->at<Vec4b>(resolution - j, i)[3] = 255;
+            }
+        }
+    }
+}
 
 int main(int argc, char** argv){
     
@@ -30,7 +109,6 @@ int main(int argc, char** argv){
     std::string usage_str = "Usage: ./pointTransfer <input-point-cloud> <input-mesh>";
     std::string pc_file_name = "";
     std::string mesh_file_name = "";
-    
     
     if(argc < 3)
     {
@@ -45,9 +123,9 @@ int main(int argc, char** argv){
     
     const int N = 1000;
     const unsigned int K = 20; // Search range
+    const int RESOLUTION = 8192;
 
     CGAL::Timer task_timer; task_timer.start();
-//    CGAL::Real_timer real_task_timer; real_task_timer.start();
     CGAL::Real_timer real_total_timer; real_total_timer.start();
 
     // Read original point set
@@ -94,7 +172,7 @@ int main(int argc, char** argv){
         }
     }
 
-    std::cout << "Point count: " << point_count << std::endl;
+    std::cout << "PC Point count: " << point_count << std::endl;
 
     int pos = 0;
 	int counter = 0;
@@ -171,14 +249,13 @@ int main(int argc, char** argv){
 		}   
 	}
 
-    std::cout << "Read point set cost: " << task_timer.time() << " seconds" << std::endl;
+    std::cout << "Read point set in: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
     // Insert number_of_data_points in the tree
     Tree tree(points.begin(), points.end());
-    Distance tr_dist;
 
-    std::cout << "Build Kd tree cost: " << task_timer.time() << " seconds" << std::endl;
+    std::cout << "Built Kd tree in: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
     pc_file_stream.close();
@@ -231,8 +308,8 @@ int main(int argc, char** argv){
 		}
 	} 
 
-    std::cout << "Vertex count: " << vertex_count << std::endl;
-    std::cout << "Face count: " << face_count << std::endl;
+    std::cout << "Mesh vertex count: " << vertex_count << std::endl;
+    std::cout << "Mesh face count: " << face_count << std::endl;
 
     pos = 0;
 	counter = 0;
@@ -317,30 +394,13 @@ int main(int argc, char** argv){
 			pos++;    
 		}   
 	}
+    
+    // Output image
+    Mat texture(RESOLUTION, RESOLUTION, CV_8UC4);
 
-    // boost::property_tree::ptree pt, output, child1, ans;
-    // child1.put("sd", "sdf");
-    // pt.push_back(std::make_pair("", child1));
-    // pt.push_back(std::make_pair("", child1));
-    // pt.push_back(std::make_pair("", child1));
-    // pt.push_back(std::make_pair("", child1));
-    // for(int index = 0; index < 2; index++){
-    //   output.push_back(std::make_pair("", pt));
-    // }
-    // ans.add_child("res", output);
-    // child1.put("sd", "---");
-
-    // std::stringstream ss;
-    // boost::property_tree::json_parser::write_json(ss, ans);
-    // std::cout << ss.str() << std::endl;
-
-    boost::property_tree::ptree pt, triangle, pts, ptList, single, data, output;
-
-    int ver[4];
-    int i = 1;
-    Point v1, v2, v3;
     counter = 0;
     pos = 0;
+    Point triangle_vertices[3];
 	// Read faces
 	while(!mesh_file_stream.eof())
 	{
@@ -361,88 +421,158 @@ int main(int argc, char** argv){
             }
             else if(pos % 4 == 0)
 			{
-				ver[0] = atof(str.c_str());              
+                // Ignore polygon vertex count
+                // Assume all polygons are triangles
 				str.clear();
 			}
 			else if(pos % 4 == 1)
 			{
-				ver[1] = atof(str.c_str());                    
-				str.clear ( );      
+				triangle_vertices[0] = vertices[atof(str.c_str())];
+				str.clear();
 			}
 			else if(pos % 4 == 2)
 			{
-				ver[2] = atof(str.c_str());                   
+				triangle_vertices[1] = vertices[atof(str.c_str())];
 				str.clear();
 			}
             else if(pos % 4 == 3)
 			{
-				ver[3] = atof(str.c_str());                   
+				triangle_vertices[2] = vertices[atof(str.c_str())];
 				str.clear();
-            
-                counter++;
-        
-                v1 = vertices[ver[1]];
-                v2 = vertices[ver[2]];
-                v3 = vertices[ver[3]];
                 
-                for(int index = 1; index <= 3; index++){
-                    // Store the vertices of the triangle
-                    pt.put("v", vertices[ver[index]].detailWithUV());
-                    triangle.push_back(std::make_pair("", pt));
-
-                    // Look for points near the vertices
-                    K_neighbor_search search(tree, vertices[ver[index]], K);
-                    for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
-                        pts.put("p", (it->first).detail());
-                        ptList.push_back(std::make_pair("", pts));
+                counter++;
+                
+                // Find nearest points to the triangle
+                std::set<Point, point_set_comparator> neighbors;
+                for(int i = 0; i < 3; i++)
+                {
+                    K_neighbor_search search(tree, triangle_vertices[i], K);
+                    for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++)
+                    {
+                        neighbors.insert(it->first);
                     }
                 }
                 
-                single.add_child("triangle", triangle);
-                triangle.clear();
-                single.add_child("points", ptList);
-                ptList.clear();
-                data.push_back(std::make_pair("",single));
-                single.clear();
+                // Create CGAL Plane_3 of triangle vertices
+                Point_3 r = point_to_point_3(triangle_vertices[0]);
+                Point_3 p = point_to_point_3(triangle_vertices[1]);
+                Point_3 q = point_to_point_3(triangle_vertices[2]);
+                Plane_3 plane(r, p, q);
+                
+                // Triangle vertices to 2D
+                Point_2 r_2 = plane.to_2d(r);
+                Point_2 p_2 = plane.to_2d(p);
+                Point_2 q_2 = plane.to_2d(q);
+                Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
+                
+                // Save points for triangulation
+                std::vector<std::pair<Point_2, unsigned>> triangulation_pts;
+                triangulation_pts.push_back(std::make_pair(r_2, 0));
+                triangulation_pts.push_back(std::make_pair(p_2, 1));
+                triangulation_pts.push_back(std::make_pair(q_2, 2));
+                
+                // Save points that are in the triangle
+                std::vector<Point> pts_in_tri;
+                std::vector<std::vector<Scalar>> pts_bc_in_tri;
+                
+                // For each neighboring point
+                int triangulation_index = 3;
+                for(auto it = neighbors.begin(); it != neighbors.end(); it++)
+                {
+                    // Get neighboring point
+                    Point n_point = *it;
+                    
+                    // Get CGAL Point_3 of point
+                    Point_3 n_point_3 = point_to_point_3(n_point);
+                    
+                    // Find orthogonal projection of point onto plane
+                    Point_3 n_proj_point_3 = plane.projection(n_point_3);
+                    
+                    // Projected point to 2D
+                    Point_2 n_point_2 = plane.to_2d(n_proj_point_3);
+                    
+                    // Compute Barycentric Coordinate
+                    std::vector<Scalar> bc;
+                    triangle_coordinates(n_point_2, bc);
+                    
+                    // Check if point in triangle
+                    if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
+                    {
+                        // Add point
+                        pts_in_tri.push_back(n_point);
+                        pts_bc_in_tri.push_back(bc);
+                        triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
+                    }
+                }
+                
+                // If there are no points in triangle
+                if(triangulation_pts.size() == 3)
+                {
+                    // Draw triangle
+                    draw_triangle(triangle_vertices, RESOLUTION, &texture);
+                }
+                // Else triangulate
+                else
+                {
+                    Delaunay delaunay;
+                    delaunay.insert(triangulation_pts.begin(), triangulation_pts.end());
+                    
+                    // For each face
+                    for(Finite_faces_iterator it = delaunay.finite_faces_begin(); it != delaunay.finite_faces_end(); it++)
+                    {
+                        Point triangle[3];
+                        for(int i = 0; i < 3; i++)
+                        {
+                            int index = it->vertex(i)->info();
+                            switch (index) {
+                                case 0:
+                                    triangle[i] = triangle_vertices[0];
+                                    break;
+                                case 1:
+                                    triangle[i] = triangle_vertices[1];
+                                    break;
+                                case 2:
+                                    triangle[i] = triangle_vertices[2];
+                                    break;
+                                default:
+                                    Point pt = pts_in_tri[index-3];
+                                    std::vector<Scalar> pt_bc = pts_bc_in_tri[index-3];
+                                    // Compute UV
+                                    pt.U = CGAL::to_double(pt_bc[0]) * triangle_vertices[0].u() + CGAL::to_double(pt_bc[1]) * triangle_vertices[1].u() + CGAL::to_double(pt_bc[2]) * triangle_vertices[2].u();
+                                    pt.V = CGAL::to_double(pt_bc[0]) * triangle_vertices[0].v() + CGAL::to_double(pt_bc[1]) * triangle_vertices[1].v() + CGAL::to_double(pt_bc[2]) * triangle_vertices[2].v();
+                                    triangle[i] = pt;
+                                    break;
+                            }
+                        }
+                        // Draw Triangle
+                        draw_triangle(triangle, RESOLUTION, &texture);
+                    }
+                }
             }
             pos++;
         }
 	}
     mesh_file_stream.close();
-    
-    output.add_child("data", data);
 
-    std::cout << "Search near points cost: " << task_timer.time() << " seconds" << std::endl;
+    std::cout << "Nearest neighbors search total time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
     
-    std::stringstream ss;
-    boost::property_tree::json_parser::write_json(ss, output);
-    std::ofstream outFile;
-    outFile.open("data/pointsMesh.json");
-    outFile << ss.str();
-    outFile.close();
-
-    std::cout << "Writing output cost: " << task_timer.time() << " seconds" << std::endl;
+    // Output
+    // Split into channels
+    Mat bgra[4];
+    split(texture, bgra);
+    // Create Dilate Kernel
+    
+    // Write Image
+    cv::imwrite("texture.png", texture);
+    std::cout << "Output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
     std::cout << "Total real time: " << real_total_timer.time() << " seconds" << std::endl;
     real_total_timer.reset();
-
-//    // search K nearest neighbours
-//    K_neighbor_search search(tree, vertices[0], K);
-//    for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++){
-//        std::cout << " d(q, nearest neighbor)=  " << (it->first).x()
-//                  << tr_dist.inverse_of_transformed_distance(it->second) << std::endl;
-//    }
-
-//    // Display points read
-//    for (std::size_t i = 0; i < 3; ++ i)
-//    {
-//      const double x = points[i].x();
-//      const double y = points[i].y();
-//      const double z = points[i].z();
-//      std::cerr << "Point (" << x << "  " << y << " "<< z << ") "<< std::endl;
-//    }
+    
+    std::cout << "VIRT: " << (CGAL::Memory_sizer().virtual_size() >> 20)  << " MiB" << std::endl;
+    std::cout << "RES:  " << (CGAL::Memory_sizer().resident_size() >> 20) << " MiB" << std::endl;
 
     return 0;
 }
