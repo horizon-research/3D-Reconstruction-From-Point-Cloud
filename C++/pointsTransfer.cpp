@@ -579,8 +579,11 @@ int main(int argc, char** argv){
     // Append edges to original
     Mat padded;
     add(texture, edges, padded);
+    // Add blurring
+    Mat blurred;
+    GaussianBlur(padded, blurred, cv::Size(11, 11), 0, 0);
     // Write Image
-    cv::imwrite("texture.png", padded);
+    cv::imwrite("texture.png", blurred);
     std::cout << "Output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
