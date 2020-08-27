@@ -40,6 +40,7 @@ typedef Kernel::FT                                          Scalar;
 
 typedef CGAL::Point_2<Kernel>                                           Point_2;
 typedef CGAL::Point_3<Kernel>                                           Point_3;
+typedef CGAL::Triangle_2<Kernel>                                        Triangle_2;
 typedef CGAL::Triangle_3<Kernel>                                        Triangle_3;
 typedef CGAL::Plane_3<Kernel>                                           Plane_3;
 typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel>   Triangle_coordinates;
@@ -58,22 +59,27 @@ Point_3 point_to_point_3(Point &p)
     return Point_3 (p.x(), p.y(), p.z());
 }
 
-void draw_triangle(Point triangle[], int resolution, Mat *texture)
+void draw_triangle(Point triangle[], int resolution, Mat texture)
 {
-    Point_2 img_coords[3];
-    for(int i = 0; i < 3; i++)
+    Point_2 p(triangle[0].u() * resolution, triangle[0].v() * resolution);
+    Point_2 q(triangle[1].u() * resolution, triangle[1].v() * resolution);
+    Point_2 r(triangle[2].u() * resolution, triangle[2].v() * resolution);
+    
+    Triangle_2 triangle_2(p,q,r);
+    
+    // If triangle is degenerate, do nothing
+    if(triangle_2.is_degenerate())
     {
-        img_coords[i] = Point_2(triangle[i].u() * resolution, triangle[i].v() * resolution);
+        return;
     }
     
-    // Compute axis-aligned bounding box
-    Kernel::Iso_rectangle_2 bb = CGAL::bounding_box(std::begin(img_coords), std::end(img_coords));
+    CGAL::Bbox_2 bb = triangle_2.bbox();
     
     // Triangle Rasterization
     // For each pixel in bounding box
-    for(int i = (int)std::floor(CGAL::to_double(bb.xmin())); i <= std::floor(CGAL::to_double(bb.xmax())); i++)
+    for(int i = (int)std::floor(bb.xmin()); i <= std::floor(bb.xmax()); i++)
     {
-        for(int j = (int)std::floor(CGAL::to_double(bb.ymin())); j <= std::floor(CGAL::to_double(bb.ymax())); j++)
+        for(int j = (int)std::floor(bb.ymin()); j <= std::floor(bb.ymax()); j++)
         {
             int x = i;
             int y = j;
@@ -82,7 +88,7 @@ void draw_triangle(Point triangle[], int resolution, Mat *texture)
             if(y >= resolution){ y = resolution - 1; }
             
             // Compute barycentric coordiates
-            Triangle_coordinates triangle_coordinates(img_coords[0], img_coords[1], img_coords[2]);
+            Triangle_coordinates triangle_coordinates(p, q, r);
             std::vector<Scalar> bc;
             triangle_coordinates(Point_2(x,y), bc);
             
@@ -95,10 +101,10 @@ void draw_triangle(Point triangle[], int resolution, Mat *texture)
                 float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
 
                 // Set Pixel
-                texture->at<Vec4b>(resolution - j, i)[0] = b;
-                texture->at<Vec4b>(resolution - j, i)[1] = g;
-                texture->at<Vec4b>(resolution - j, i)[2] = r;
-                texture->at<Vec4b>(resolution - j, i)[3] = 255;
+                texture.at<Vec4b>(resolution - j, i)[0] = b;
+                texture.at<Vec4b>(resolution - j, i)[1] = g;
+                texture.at<Vec4b>(resolution - j, i)[2] = r;
+                texture.at<Vec4b>(resolution - j, i)[3] = 255;
             }
         }
     }
@@ -510,7 +516,7 @@ int main(int argc, char** argv){
                 if(triangulation_pts.size() == 3)
                 {
                     // Draw triangle
-                    draw_triangle(triangle_vertices, RESOLUTION, &texture);
+                    draw_triangle(triangle_vertices, RESOLUTION, texture);
                 }
                 // Else triangulate
                 else
@@ -546,7 +552,7 @@ int main(int argc, char** argv){
                             }
                         }
                         // Draw Triangle
-                        draw_triangle(triangle, RESOLUTION, &texture);
+                        draw_triangle(triangle, RESOLUTION, texture);
                     }
                 }
             }
@@ -579,11 +585,8 @@ int main(int argc, char** argv){
     // Append edges to original
     Mat padded;
     add(texture, edges, padded);
-    // Add blurring
-    Mat blurred;
-    GaussianBlur(padded, blurred, cv::Size(11, 11), 0, 0);
     // Write Image
-    cv::imwrite("texture.png", blurred);
+    cv::imwrite("texture.png", padded);
     std::cout << "Output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
