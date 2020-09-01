@@ -465,9 +465,6 @@ int main(int argc, char** argv){
                 Point_3 p = point_to_point_3(triangle_vertices[1]);
                 Point_3 q = point_to_point_3(triangle_vertices[2]);
                 
-                // Check if triangle is degenerate
-                if(Triangle_3(r,p,q).is_degenerate()){ continue; }
-                
                 // Create plane
                 Plane_3 plane(r, p, q);
                 
@@ -475,6 +472,8 @@ int main(int argc, char** argv){
                 Point_2 r_2 = plane.to_2d(r);
                 Point_2 p_2 = plane.to_2d(p);
                 Point_2 q_2 = plane.to_2d(q);
+                
+                // For computing barycentric coordinates
                 Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
                 
                 // Save points for triangulation
@@ -505,7 +504,15 @@ int main(int argc, char** argv){
                     
                     // Compute Barycentric Coordinate
                     std::vector<Scalar> bc;
-                    triangle_coordinates(n_point_2, bc);
+                    try
+                    {
+                        triangle_coordinates(n_point_2, bc);
+                    }
+                    catch (int e)
+                    {
+                        // Skip if exception occurs
+                        continue;
+                    }
                     
                     // Check if point in triangle
                     if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
