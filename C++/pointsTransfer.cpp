@@ -460,10 +460,15 @@ int main(int argc, char** argv){
                     }
                 }
                 
-                // Create CGAL Plane_3 of triangle vertices
+                // Create CGAL Point_3 of triangle vertices
                 Point_3 r = point_to_point_3(triangle_vertices[0]);
                 Point_3 p = point_to_point_3(triangle_vertices[1]);
                 Point_3 q = point_to_point_3(triangle_vertices[2]);
+                
+                // Check if triangle is degenerate
+                if(Triangle_3(r,p,q).is_degenerate()){ continue; }
+                
+                // Create plane
                 Plane_3 plane(r, p, q);
                 
                 // Triangle vertices to 2D
