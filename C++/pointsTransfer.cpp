@@ -507,20 +507,20 @@ int main(int argc, char** argv){
                     try
                     {
                         triangle_coordinates(n_point_2, bc);
+                        
+                        // Check if point in triangle
+                        if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
+                        {
+                            // Add point
+                            pts_in_tri.push_back(n_point);
+                            pts_bc_in_tri.push_back(bc);
+                            triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
+                        }
                     }
-                    catch (int e)
+                    catch(int e)
                     {
-                        // Skip if exception occurs
-                        continue;
-                    }
-                    
-                    // Check if point in triangle
-                    if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
-                    {
-                        // Add point
-                        pts_in_tri.push_back(n_point);
-                        pts_bc_in_tri.push_back(bc);
-                        triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
+                        std::cerr << "Exception: " << e << std::endl;
+                        std::cerr << "Barycentric coordiante: " << bc[0] << " " << bc[1] << " " << bc[2] << std::endl;
                     }
                 }
                 
