@@ -468,10 +468,22 @@ int main(int argc, char** argv){
                 // Create plane
                 Plane_3 plane(r, p, q);
                 
+                Point_2 r_2;
+                Point_2 p_2;
+                Point_2 q_2;
+                
                 // Triangle vertices to 2D
-                Point_2 r_2 = plane.to_2d(r);
-                Point_2 p_2 = plane.to_2d(p);
-                Point_2 q_2 = plane.to_2d(q);
+                try
+                {
+                    r_2 = plane.to_2d(r);
+                    p_2 = plane.to_2d(p);
+                    q_2 = plane.to_2d(q);
+                }
+                catch(...)
+                {
+                    // Skip if projection fails
+                    continue;
+                }
                 
                 // For computing barycentric coordinates
                 Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
