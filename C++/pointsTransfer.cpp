@@ -517,11 +517,7 @@ int main(int argc, char** argv){
                             triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
                         }
                     }
-                    catch(int e)
-                    {
-                        std::cerr << "Exception: " << e << std::endl;
-                        std::cerr << "Barycentric coordiante: " << bc[0] << " " << bc[1] << " " << bc[2] << std::endl;
-                    }
+                    catch(...){}
                 }
                 
                 // If there are no points in triangle
