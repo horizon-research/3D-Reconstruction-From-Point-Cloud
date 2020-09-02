@@ -35,7 +35,7 @@ typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterat
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance>                            K_neighbor_search;
 typedef K_neighbor_search::Tree                                                         Tree;
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel   Kernel;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel   Kernel;
 typedef Kernel::FT                                          Scalar;
 
 typedef CGAL::Point_2<Kernel>                                           Point_2;
@@ -65,15 +65,7 @@ void draw_triangle(Point triangle[], int resolution, Mat texture)
     Point_2 q(triangle[1].u() * resolution, triangle[1].v() * resolution);
     Point_2 r(triangle[2].u() * resolution, triangle[2].v() * resolution);
     
-    Triangle_2 triangle_2(p,q,r);
-    
-    // If triangle is degenerate, do nothing
-    if(triangle_2.is_degenerate())
-    {
-        return;
-    }
-    
-    CGAL::Bbox_2 bb = triangle_2.bbox();
+    CGAL::Bbox_2 bb = Triangle_2(p,q,r).bbox();
     
     // Triangle Rasterization
     // For each pixel in bounding box
@@ -467,24 +459,11 @@ int main(int argc, char** argv){
                 
                 // Create plane
                 Plane_3 plane(r, p, q);
-                
-                Point_2 r_2;
-                Point_2 p_2;
-                Point_2 q_2;
-                
-                // Triangle vertices to 2D
-                try
-                {
-                    r_2 = plane.to_2d(r);
-                    p_2 = plane.to_2d(p);
-                    q_2 = plane.to_2d(q);
-                }
-                catch(...)
-                {
-                    // Skip if projection fails
-                    continue;
-                }
-                
+                // Project to 2D
+                Point_2 r_2 = plane.to_2d(r);
+                Point_2 p_2 = plane.to_2d(p);
+                Point_2 q_2 = plane.to_2d(q);
+
                 // For computing barycentric coordinates
                 Triangle_coordinates triangle_coordinates(r_2, p_2, q_2);
                 
@@ -516,20 +495,16 @@ int main(int argc, char** argv){
                     
                     // Compute Barycentric Coordinate
                     std::vector<Scalar> bc;
-                    try
+                    triangle_coordinates(n_point_2, bc);
+                    
+                    // Check if point in triangle
+                    if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
                     {
-                        triangle_coordinates(n_point_2, bc);
-                        
-                        // Check if point in triangle
-                        if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
-                        {
-                            // Add point
-                            pts_in_tri.push_back(n_point);
-                            pts_bc_in_tri.push_back(bc);
-                            triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
-                        }
+                        // Add point
+                        pts_in_tri.push_back(n_point);
+                        pts_bc_in_tri.push_back(bc);
+                        triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
                     }
-                    catch(...){}
                 }
                 
                 // If there are no points in triangle
