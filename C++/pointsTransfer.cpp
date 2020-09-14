@@ -449,16 +449,18 @@ int main(int argc, char** argv){
         }
 	}
     mesh_file_stream.close();
+    std::cout << "Read mesh faces: " << task_timer.time() << " seconds" << std::endl;
+    task_timer.reset();
 
     Point triangle_vertices[3];
-    for(int i = 0; i < face_count; i++){
+    for(int j = 0; j < face_count; j++){
 
         // Find nearest points to the triangle
         std::set<Point, point_set_comparator> neighbors;
-        for(int j = 0; j < 3; j++)
+        for(int i = 0; i < 3; i++)
         {
-            triangle_vertices[j] = vertices[faces[i][j]];
-            K_neighbor_search search(tree, triangle_vertices[j], K);
+            triangle_vertices[i] = vertices[faces[j][i]];
+            K_neighbor_search search(tree, triangle_vertices[i], K);
             for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++)
             {
                 neighbors.insert(it->first);
