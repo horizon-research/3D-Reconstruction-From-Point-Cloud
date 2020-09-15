@@ -19,7 +19,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
@@ -35,8 +35,8 @@ typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterat
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance>                            K_neighbor_search;
 typedef K_neighbor_search::Tree                                                         Tree;
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel   Kernel;
-typedef Kernel::FT                                          Scalar;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel     Kernel;
+typedef Kernel::FT                                              Scalar;
 
 typedef CGAL::Point_2<Kernel>                                           Point_2;
 typedef CGAL::Point_3<Kernel>                                           Point_3;
@@ -452,6 +452,9 @@ int main(int argc, char** argv){
     std::cout << "Read mesh faces: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
+    double total_neighbor_search_time = 0;
+    double total_triangle_draw_time = 0;
+    
     Point triangle_vertices[3];
     for(int j = 0; j < face_count; j++){
 
@@ -466,6 +469,9 @@ int main(int argc, char** argv){
                 neighbors.insert(it->first);
             }
         }
+        
+        total_neighbor_search_time += task_timer.time();
+        task_timer.reset();
         
         // Create CGAL Point_3 of triangle vertices
         Point_3 r = point_to_point_3(triangle_vertices[0]);
@@ -565,9 +571,15 @@ int main(int argc, char** argv){
                 draw_triangle(triangle, RESOLUTION, texture);
             }
         }
+        
+        total_triangle_draw_time += task_timer.time();
+        task_timer.reset();
     }
-
-    std::cout << "Nearest neighbors search total time: " << task_timer.time() << " seconds" << std::endl;
+    
+    std::cout << "Neighbor search total time: " << total_neighbor_search_time << " seconds" << std::endl;
+    task_timer.reset();
+    
+    std::cout << "Draw triangles total time: " << total_triangle_draw_time << " seconds" << std::endl;
     task_timer.reset();
     
     // Output
