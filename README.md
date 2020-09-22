@@ -1,5 +1,24 @@
 # 3D-Reconstruction-From-Point-Cloud
 
+## Reconstruct Mesh from Point Cloud (Last updated: MeshLab v2016.12)
+
+1. Open [MeshLab](https://www.meshlab.net)
+
+2. Goto ```File -> Import Mesh...``` and select your input **point cloud file**.
+
+3. Goto ```Filters -> Point Set -> Compute normals for point sets```. This is required for Screened Poisson Reconstruction
+
+4. Goto ```Filters -> Remeshing, Simplification and Reconstruction -> Screened Poisson Surface Reconstruction```
+
+   1. You can adjust *Reconstruction Depth* to obtain meshes of different resolution (triangle count). The deeper the reconstruction depth is, the higher the resolution.
+   
+   2. We used *Depth = 8* for low resolution and *Depth = 10* for high resolution.
+
+5. In project window (by default is on top right of the window), select *Poisson mesh*, goto ```File -> Export Mesh As...``` to save the reconstructed mesh
+
+   1. in *Choose saving options* window, check *Color*, *Normal* for *Vert* , and uncheck *Binary encoding* for *Additional parameters*
+
+
 ## Direct Point Transfer
 
 ### Compiling ```pointsTransfer.cpp``` with CmakeList (in ```C++/```)
