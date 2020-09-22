@@ -4,7 +4,7 @@
 
 1. Open [MeshLab](https://www.meshlab.net)
 
-2. Goto ```File -> Import Mesh...``` and select your input **point cloud file**.
+2. Goto ```File -> Import Mesh...``` and select your input **point cloud file**
 
 3. Goto ```Filters -> Point Set -> Compute normals for point sets```. This is required for Screened Poisson Reconstruction
 
@@ -12,7 +12,7 @@
 
    1. You can adjust *Reconstruction Depth* to obtain meshes of different resolution (triangle count). The deeper the reconstruction depth is, the higher the resolution.
    
-   2. We used *Depth = 8* for low resolution and *Depth = 10* for high resolution.
+   2. We used *Depth = 8* for low resolution and *Depth = 10* for high resolution
 
 5. In project window (by default is on top right of the window), select *Poisson mesh*, goto ```File -> Export Mesh As...``` to save the reconstructed mesh
 
@@ -25,15 +25,25 @@
 
 2. Press *Esc* to dismiss the launch screen and press *Delete* (macOS: *fn + delete*) to remove the default cube
 
-3. Use ```File -> Import -> Stanford (.ply)``` to import both high and low resolution meshes. Note: files can only be opened one by one.
+3. Use ```File -> Import -> Stanford (.ply)``` to import both high and low resolution meshes. Note: files can only be opened one by one
 
 4. Select (on top right of the window) the low resolution mesh
 
-5. Click *Object Mode* (on buttom of the window) and switch to *Edit Mode*.
+5. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
 
 6. Select *Shading/UVs* (on the left side), under *UV Mapping*, select *Smart UV Project* and click OK
 
+7. Open a new image view
 
+   1. Goto the top right corner of the 3D view and drag left to create a new area
+   
+   2. On buttom left of the view, click *Object Mode* and switch to *UV/Image Editor*
+
+8. On the bottm of the view, click *New* and set the *Width* and *Height* to 8192px
+
+9. Select the high resolution mesh, then, while holding *shift*, select the low resolution mesh
+
+10. 
 
 ## Direct Color Transfer from Point Cloud
 
