@@ -19,7 +19,23 @@
    1. in *Choose saving options* window, check *Color*, *Normal* for *Vert* , and uncheck *Binary encoding* for *Additional parameters*
 
 
-## Direct Point Transfer
+## Color Transfer from High Resolution Mesh using Blender (Last updated v2.79b, using defualt layout)
+
+1. Open [Blender](https://www.blender.org)
+
+2. Press *Esc* to dismiss the launch screen and press *Delete* (macOS: *fn + delete*) to remove the default cube
+
+3. Use ```File -> Import -> Stanford (.ply)``` to import both high and low resolution meshes. Note: files can only be opened one by one.
+
+4. Select (on top right of the window) the low resolution mesh
+
+5. Click *Object Mode* (on buttom of the window) and switch to *Edit Mode*.
+
+6. Select *Shading/UVs* (on the left side), under *UV Mapping*, select *Smart UV Project* and click OK
+
+
+
+## Direct Color Transfer from Point Cloud
 
 ### Compiling ```pointsTransfer.cpp``` with CmakeList (in ```C++/```)
 
