@@ -1,4 +1,4 @@
-# 3D-Reconstruction-From-Point-Cloud
+# 3D Reconstruction From Point Cloud with Color Transfer
 
 ## 1. Reconstruct Mesh from Point Cloud 
 
@@ -22,7 +22,7 @@
 
 ## Color Transfer
 
-### Option 1: Color Transfer from High Resolution Mesh using Blender (Last updated for v2.79b, using defualt layout)
+### Option 1: Color transfer from high resolution mesh using Blender (Last updated for v2.79b, using defualt layout)
 
 1. Open [Blender](https://www.blender.org)
 
@@ -60,11 +60,23 @@
 
 ### Option 2: Direct Color Transfer from Point Cloud (in ```C++/```)
 
-#### Compiling ```pointsTransfer.cpp``` with CmakeList
+#### 0: Prepare low resolution mesh with UV
 
-##### Step 1: Create cmake files
+1. Open [Blender](https://www.blender.org)
 
-###### Option 1: Use CCMake
+2. Press *Esc* to dismiss the launch screen and press *Delete* (macOS: *fn + delete*) to remove the default cube
+
+3. Use ```File -> Import -> Stanford (.ply)``` to import the low resolution mesh
+
+4. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
+
+5. Select *Shading/UVs* (on the left side), under *UV Mapping*, select *Smart UV Project* and click OK
+
+6. Goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
+
+#### 1: Create CMake files
+
+##### Option 1: Use CCMake
 
 ```ccmake .``` 
 
@@ -78,21 +90,23 @@ Press C to configure ==> set  **boost_DIR** (/usr/local/Cellar/boost@1.60/1.60.0
 
 If no errors, press G to generate, then press Q to quit
 
-###### Option 2: Use CMake
+##### Option 2: Use CMake
 
 ```cmake .```
 
-##### Step 2: Compile
+#### 2: Compile
 
 ```make```
 
-##### Step 3: Run! 
+#### 3: Run! 
 
 ```./pointsTransfer <input-point-cloud> <input-triangular-mesh>```
 
 The output would be ```texture.png``` under ```C++/```
 
+## 3. Prepare for use with Unity
 
+### 1. 
 
 
 
