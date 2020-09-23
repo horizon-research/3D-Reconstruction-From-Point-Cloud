@@ -1,6 +1,6 @@
 # 3D-Reconstruction-From-Point-Cloud
 
-## Reconstruct Mesh from Point Cloud (Last updated: MeshLab v2016.12)
+## 1. Reconstruct Mesh from Point Cloud (Last updated: MeshLab v2016.12)
 
 1. Open [MeshLab](https://www.meshlab.net)
 
@@ -18,8 +18,9 @@
 
    1. in *Choose saving options* window, check *Color*, *Normal* for *Vert* , and uncheck *Binary encoding* for *Additional parameters*
 
+## Color Transfer
 
-## Color Transfer from High Resolution Mesh using Blender (Last updated v2.79b, using defualt layout)
+### Option 1: Color Transfer from High Resolution Mesh using Blender (Last updated v2.79b, using defualt layout)
 
 1. Open [Blender](https://www.blender.org)
 
@@ -55,13 +56,13 @@
     
 11. Select low resolution mesh and goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
 
-## Direct Color Transfer from Point Cloud
+### Option 2: Direct Color Transfer from Point Cloud
 
-### Compiling ```pointsTransfer.cpp``` with CmakeList (in ```C++/```)
+#### Compiling ```pointsTransfer.cpp``` with CmakeList (in ```C++/```)
 
-#### Step 1: Create cmake files
+##### Step 1: Create cmake files
 
-##### Option 1: Use CCMake
+###### Option 1: Use CCMake
 
 ```ccmake .``` 
 
@@ -75,15 +76,15 @@ Press C to configure ==> set  **boost_DIR** (/usr/local/Cellar/boost@1.60/1.60.0
 
 If no errors, press G to generate, then press Q to quit
 
-##### Option 2: Use CMake
+###### Option 2: Use CMake
 
 ```cmake .```
 
-#### Step 2: Compile
+##### Step 2: Compile
 
 ```make```
 
-#### Step 3: Run! 
+##### Step 3: Run! 
 
 ```./pointsTransfer <input-point-cloud> <input-triangular-mesh>```
 
