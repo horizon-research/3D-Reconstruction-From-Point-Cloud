@@ -45,9 +45,9 @@
 
 10. While in *Edit Mode*, goto *Properties Editor* (buttom right of the window), select *Render* (camera icon), and find *Bake*.
 
-   1. Change *Bake Mode* to *Vertex Color*.
+    1. Change *Bake Mode* to *Vertex Color*.
    
-   2. 
+    2. Check *Selected to Active*.
 
 ## Direct Color Transfer from Point Cloud
 
