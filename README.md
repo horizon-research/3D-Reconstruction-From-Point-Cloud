@@ -43,7 +43,11 @@
 
 9. Select the high resolution mesh, then, while holding *shift*, select the low resolution mesh
 
-10. 
+10. While in *Edit Mode*, goto *Properties Editor* (buttom right of the window), select *Render* (camera icon), and find *Bake*.
+
+   1. Change *Bake Mode* to *Vertex Color*.
+   
+   2. 
 
 ## Direct Color Transfer from Point Cloud
 
