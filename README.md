@@ -1,6 +1,8 @@
 # 3D-Reconstruction-From-Point-Cloud
 
-## 1. Reconstruct Mesh from Point Cloud (Last updated: MeshLab v2016.12)
+## 1. Reconstruct Mesh from Point Cloud 
+
+### Option 1: MeshLab (Open source. Last updated for: MeshLab v2016.12)
 
 1. Open [MeshLab](https://www.meshlab.net)
 
@@ -20,7 +22,7 @@
 
 ## Color Transfer
 
-### Option 1: Color Transfer from High Resolution Mesh using Blender (Last updated v2.79b, using defualt layout)
+### Option 1: Color Transfer from High Resolution Mesh using Blender (Last updated for v2.79b, using defualt layout)
 
 1. Open [Blender](https://www.blender.org)
 
@@ -56,9 +58,9 @@
     
 11. Select low resolution mesh and goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
 
-### Option 2: Direct Color Transfer from Point Cloud
+### Option 2: Direct Color Transfer from Point Cloud (in ```C++/```)
 
-#### Compiling ```pointsTransfer.cpp``` with CmakeList (in ```C++/```)
+#### Compiling ```pointsTransfer.cpp``` with CmakeList
 
 ##### Step 1: Create cmake files
 
