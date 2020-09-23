@@ -48,6 +48,12 @@
     1. Change *Bake Mode* to *Vertex Color*.
    
     2. Check *Selected to Active*.
+    
+    3. Hit *Bake*
+    
+    4. After baking is done, at bottom of image view, goto ```Image -> Save As Image```
+    
+11. Select low resolution mesh and goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
 
 ## Direct Color Transfer from Point Cloud
 
