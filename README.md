@@ -34,7 +34,7 @@
 
 5. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
 
-6. Select *Shading/UVs* (on the left side), under *UV Mapping*, select *Smart UV Project* and click OK
+6. Select *Shading/UVs* (on the left side of the view), under *UV Mapping*, select *Smart UV Project* and click OK
 
 7. Open a new image view
 
@@ -70,7 +70,7 @@
 
 4. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
 
-5. Select *Shading/UVs* (on the left side), under *UV Mapping*, select *Smart UV Project* and click OK
+5. Select *Shading/UVs* (on the left side of the view), under *UV Mapping*, select *Smart UV Project* and click OK
 
 6. Goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
 
@@ -104,9 +104,27 @@ If no errors, press G to generate, then press Q to quit
 
 The output would be ```texture.png``` under ```C++/```
 
-## 3. Prepare for use with Unity
+## 3. Prepare for use in Unity
 
-### 1. 
+1. Open [Blender](https://www.blender.org)
+
+2. Press *Esc* to dismiss the launch screen and press *Delete* (macOS: *fn + delete*) to remove the default cube
+
+3. Use ```File -> Import -> Stanford (.ply)``` to import the low resolution mesh with UVs.
+
+4. Select *Tools* (on the left side of the view), under *Edit*, click on *Set Origin* and select *Geometry to Origin* so the object is easier to find in Unity
+
+5. Optional: some meshes may require normal flipping to be rendered properly in Unity.
+
+   0. For example, most meshes have normals pointing outwards and will not be visible if the camera is placed inside the mesh
+   
+   1. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
+   
+   2. Select *Shading/UVs* (on the left side of the view), under *Shading*, *Normals:*, click *Flip Direction*
+   
+6. Goto ```File -> Export -> Wavefront (.obj)```. In *Export OBJ*, check *Include UVs* and uncheck *Write Materials*, then click *Export OBJ* to save the low resolution mesh with its UVs.
+
+## 4. Import to Unity
 
 
 
