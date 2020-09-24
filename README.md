@@ -22,7 +22,7 @@
 
 ## Color Transfer
 
-### Option 1: Color transfer from high resolution mesh using Blender (Last updated for v2.79b, using defualt layout)
+### Option 1: Color transfer from high resolution mesh using Blender (Open Source. Last updated for v2.79b, using defualt layout)
 
 1. Open [Blender](https://www.blender.org)
 
@@ -60,7 +60,7 @@
 
 ### Option 2: Direct Color Transfer from Point Cloud (in ```C++/```)
 
-#### 0: Prepare low resolution mesh with UV
+#### 0: Prepare low resolution mesh with UV using Blender (Open Source. Last updated for v2.79b, using defualt layout)
 
 1. Open [Blender](https://www.blender.org)
 
@@ -104,7 +104,7 @@ If no errors, press G to generate, then press Q to quit
 
 The output would be ```texture.png``` under ```C++/```
 
-## 3. Prepare for use in Unity
+## 3. Prepare for use in Unity using Blender (Open Source. Last updated for v2.79b, using defualt layout)
 
 1. Open [Blender](https://www.blender.org)
 
@@ -124,7 +124,21 @@ The output would be ```texture.png``` under ```C++/```
    
 6. Goto ```File -> Export -> Wavefront (.obj)```. In *Export OBJ*, check *Include UVs* and uncheck *Write Materials*, then click *Export OBJ* to save the low resolution mesh with its UVs.
 
-## 4. Import to Unity
+## 4. Import to Unity (Free Personal Use. Last Updated for v2018.4.1f1)
+
+1. Open [Unity](https://unity.com)
+
+2. Create new project/open exisiting project
+
+3. Open project folder. You can right click in project view and click *Reveal in Finder/Show in Explorer*.
+
+<img width="1003" alt="Screen Shot 2020-09-24 at 01 11 43" src="https://user-images.githubusercontent.com/25496380/94118852-f0b4ec80-fe02-11ea-8046-0f34a14eb788.png">
+
+4. Copy the mesh (.obj) and texture file into ```Assets``` folder.
+
+
+
+
 
 
 
