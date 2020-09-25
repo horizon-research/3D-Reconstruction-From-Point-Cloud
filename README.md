@@ -136,6 +136,14 @@ The output would be ```texture.png``` under ```C++/```
 
 4. Copy the mesh (.obj) and texture file into ```Assets``` folder.
 
+5. Go back to Unity and wait for Unity to finish importing the asset.
+
+6. Select the mesh in project explorer and in insepctor, goto *Materials* tab, switch to *Use External Materials (Legacy)* for *Location*. Click *Apply*.
+
+<img width="397" alt="Screen Shot 2020-09-25 at 01 40 09" src="https://user-images.githubusercontent.com/25496380/94246447-9b471100-fed0-11ea-91fd-836922dd149a.png">
+
+7. After Unity finishes reimporting the mesh, you will find a new *Materials* folder which contains a new *defaultMat* material
+
 
 
 
