@@ -86,6 +86,8 @@
 
 5. Select *Shading/UVs* (on the left side of the view), under *UV Mapping*, select *Smart UV Project* and click OK
 
+<img width="987" alt="Screen Shot 2020-09-25 at 03 34 34" src="https://user-images.githubusercontent.com/25496380/94257364-0ba95e80-fee0-11ea-9140-c372000a7e17.png">
+
 6. Goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
 
 #### 1: Create CMake files
@@ -133,13 +135,19 @@ The output would be ```texture.png``` under ```C++/```
 
 4. Select *Tools* (on the left side of the view), under *Edit*, click on *Set Origin* and select *Geometry to Origin* so the object is easier to find in Unity
 
+<img width="990" alt="Screen Shot 2020-09-25 at 03 32 20" src="https://user-images.githubusercontent.com/25496380/94257176-c08f4b80-fedf-11ea-8d40-d2a5da4c1160.png">
+
 5. Optional: some meshes may require normal flipping to be rendered properly in Unity.
 
    0. For example, most meshes have normals pointing outwards and will not be visible if the camera is placed inside the mesh
    
    1. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
    
+   <img width="991" alt="Screen Shot 2020-09-25 at 03 33 32" src="https://user-images.githubusercontent.com/25496380/94257282-e61c5500-fedf-11ea-8f5e-d565f56b10c0.png">
+   
    2. Select *Shading/UVs* (on the left side of the view), under *Shading*, *Normals:*, click *Flip Direction*
+   
+   <img width="985" alt="Screen Shot 2020-09-25 at 03 34 09" src="https://user-images.githubusercontent.com/25496380/94257332-ff250600-fedf-11ea-84ce-9234e77a6a8d.png">
    
 6. Goto ```File -> Export -> Wavefront (.obj)```. In *Export OBJ*, check *Include UVs* and uncheck *Write Materials*, then click *Export OBJ* to save the low resolution mesh with its UVs.
 
