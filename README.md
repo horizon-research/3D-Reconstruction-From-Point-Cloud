@@ -2,7 +2,7 @@
 
 ## 1. Reconstruct Mesh from Point Cloud 
 
-### Option 1: MeshLab (Open source. Last updated for: MeshLab v2016.12)
+### Option 1: MeshLab (Open source. Last updated for v2016.12)
 
 1. Open [MeshLab](https://www.meshlab.net)
 
@@ -19,6 +19,18 @@
 5. In project window (by default is on top right of the window), select *Poisson mesh*, goto ```File -> Export Mesh As...``` to save the reconstructed mesh
 
    1. in *Choose saving options* window, check *Color*, *Normal* for *Vert* , and uncheck *Binary encoding* for *Additional parameters*
+   
+### Option 2: Agisoft Metashape (Propreitary. Last updated for v1.6.1)
+
+1. Open [Metashape](https://www.agisoft.com).
+
+2. Goto ```File -> Import -> Import Points...``` and select your input **point cloud file**
+
+3. Goto ```Model -> Transform Region -> Reset Region``` and select yes
+
+4. Goto ```Workflow -> Build Mesh...```, in *Quality* select/enter desired *Face count* and click *OK*
+
+5. Goto ```File -> Export -> Export Model...```, uncheck *Binary Encoding* and click *OK*
 
 ## Color Transfer
 
