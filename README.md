@@ -16,7 +16,9 @@
    
    2. We used *Depth = 8* for low resolution and *Depth = 10* for high resolution
 
-5. Goto ```File -> Export Mesh As...``` to save the reconstructed mesh
+5. In project window (by default is on top right of the window), select *Poisson mesh*, goto ```File -> Export Mesh As...``` to save the reconstructed mesh
+ 
+   <img width="891" alt="Screen Shot 2020-09-25 at 03 18 57" src="https://user-images.githubusercontent.com/25496380/94256030-01866080-fede-11ea-87c4-a4ef023b2bcf.png">
 
    1. in *Choose saving options* window, check *Color*, *Normal* for *Vert* , and uncheck *Binary encoding* for *Additional parameters*
    
