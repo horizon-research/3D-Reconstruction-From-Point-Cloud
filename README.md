@@ -90,21 +90,26 @@
 
 ##### Option 1: Use CCMake
 
-```ccmake .``` 
+1. ```ccmake .``` 
 
-Then you get empty cache page to modify settings.
+2. Terminal will now display an empty cache page to modify settings
 
-Press C to configure ==> set: **CGAL_DIR** (the path to CGAL Library, for example, /Users/ting/PointCloud/CGAL-5.0),   **CMAKE_BUILD_TYPE** (RELEASE)
+3. Press *c* to configure, and after auto configuration, check if the following are set. You can press enter to modify an option, and press enter again to save an option
 
-Note: press enter to modify an option, and press enter to save an option
+   1. **CGAL_DIR**: the path to CGAL (e.g. /usr/local/lib/cmake/CGAL).
+   2. **Boost_INCLUDE_DIR**: the path to boost library (e.g. /usr/local/include)
 
-Press C to configure ==> set  **boost_DIR** (/usr/local/Cellar/boost@1.60/1.60.0/include)
+4. If no errors or warnings are emitted, continue to press *c* to confingure until the option for press *g* to generate is available
 
-If no errors, press G to generate, then press Q to quit
+5. Press *g* to generate
+
+6. CCMake will exit. Continue to compilation.
 
 ##### Option 2: Use CMake
 
-```cmake .```
+1. ```cmake .```
+
+2. If no errors or warnings are emitted, continue to compilation
 
 #### 2: Compile
 
