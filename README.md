@@ -46,15 +46,27 @@
 
 4. Select (on top right of the window) the low resolution mesh
 
+<img width="988" alt="Screen Shot 2020-09-25 at 03 37 56" src="https://user-images.githubusercontent.com/25496380/94257714-98ecb300-fee0-11ea-9256-2e8232206e38.png">
+
 5. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
 
+<img width="991" alt="Screen Shot 2020-09-25 at 03 33 32" src="https://user-images.githubusercontent.com/25496380/94257282-e61c5500-fedf-11ea-8f5e-d565f56b10c0.png">
+
 6. Select *Shading/UVs* (on the left side of the view), under *UV Mapping*, select *Smart UV Project* and click OK
+
+<img width="987" alt="Screen Shot 2020-09-25 at 03 34 34" src="https://user-images.githubusercontent.com/25496380/94257364-0ba95e80-fee0-11ea-9140-c372000a7e17.png">
 
 7. Open a new image view
 
    1. Goto the top right corner of the 3D view and drag left to create a new area
    
+   <img width="986" alt="Screen Shot 2020-09-25 at 03 41 34" src="https://user-images.githubusercontent.com/25496380/94258053-1fa19000-fee1-11ea-82d4-23ac539b9f40.png">
+   
+   <img width="985" alt="Screen Shot 2020-09-25 at 03 42 51" src="https://user-images.githubusercontent.com/25496380/94258192-55df0f80-fee1-11ea-85fa-38a504b7310a.png">
+   
    2. On buttom left of the view, click *Object Mode* and switch to *UV/Image Editor*
+   
+   <img width="989" alt="Screen Shot 2020-09-25 at 03 44 15" src="https://user-images.githubusercontent.com/25496380/94258237-668f8580-fee1-11ea-8a19-f3e43bb256b1.png">
 
 8. On the bottm of the view, click *New* and set the *Width* and *Height* to 8192px
 
@@ -67,6 +79,8 @@
     2. Check *Selected to Active*.
     
     3. Hit *Bake*
+    
+    <img width="322" alt="Screen Shot 2020-09-25 at 03 45 19" src="https://user-images.githubusercontent.com/25496380/94258353-9474ca00-fee1-11ea-9b46-b7caeb5ab19c.png">
     
     4. After baking is done, at bottom of image view, goto ```Image -> Save As Image```
     
@@ -83,6 +97,8 @@
 3. Use ```File -> Import -> Stanford (.ply)``` to import the low resolution mesh
 
 4. Click *Object Mode* (on buttom left of the view) and switch to *Edit Mode*
+
+<img width="991" alt="Screen Shot 2020-09-25 at 03 33 32" src="https://user-images.githubusercontent.com/25496380/94257282-e61c5500-fedf-11ea-8f5e-d565f56b10c0.png">
 
 5. Select *Shading/UVs* (on the left side of the view), under *UV Mapping*, select *Smart UV Project* and click OK
 
