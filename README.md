@@ -64,11 +64,11 @@
    
    <img width="985" alt="Screen Shot 2020-09-25 at 03 42 51" src="https://user-images.githubusercontent.com/25496380/94258192-55df0f80-fee1-11ea-85fa-38a504b7310a.png">
    
-   2. On buttom left of the view, click *Object Mode* and switch to *UV/Image Editor*
+   2. On buttom left of the new view, click *Object Mode* and switch to *UV/Image Editor*
    
    <img width="989" alt="Screen Shot 2020-09-25 at 03 44 15" src="https://user-images.githubusercontent.com/25496380/94258237-668f8580-fee1-11ea-8a19-f3e43bb256b1.png">
 
-8. On the bottm of the view, click *New* and set the *Width* and *Height* to 8192px
+8. On the bottm of the image view, click *New* and set the *Width* and *Height* to 8192px
 
 9. Select the high resolution mesh, then, while holding *shift*, select the low resolution mesh
 
