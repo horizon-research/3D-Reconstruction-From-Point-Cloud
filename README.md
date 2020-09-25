@@ -144,11 +144,17 @@ The output would be ```texture.png``` under ```C++/```
 
 7. After Unity finishes reimporting the mesh, you will find a new *Materials* folder which contains a new *defaultMat* material
 
+8. Select the material, click the circle next to *Albedo* under *Main Maps* and select your texture file.
 
+<img width="786" alt="Screen Shot 2020-09-25 at 02 15 23" src="https://user-images.githubusercontent.com/25496380/94249627-04308800-fed5-11ea-8531-f2bb0890428c.png">
 
+9. Drag and drop the mesh into hierarchy to add the mesh to the scene.
 
+<img width="1440" alt="Screen Shot 2020-09-25 at 02 16 40" src="https://user-images.githubusercontent.com/25496380/94249859-5376b880-fed5-11ea-9165-864102d9481f.png">
 
+10. Done.
 
+<img width="726" alt="Screen Shot 2020-09-25 at 02 18 14" src="https://user-images.githubusercontent.com/25496380/94249924-65585b80-fed5-11ea-991a-208d4eabdb97.png">
 
 
 
