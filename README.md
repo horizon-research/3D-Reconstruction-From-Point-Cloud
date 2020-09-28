@@ -86,7 +86,7 @@
     
 11. Select low resolution mesh and goto ```File -> Export -> Stanford (.ply)```. In *Export PLY*, check *UVs*, then click *Export PLY* to save the low resolution mesh with its UVs.
 
-### Option 2: Point-based Transfer (i.e., direct Color Transfer from Point Cloud) (in ```src/```)
+### Option 2: Point-based Transfer (i.e., direct color transfer from point cloud) (in ```src/```)
 
 #### 0: Prepare low resolution mesh with UV using Blender (Open Source. Last updated for v2.79b, using defualt layout)
 
@@ -139,7 +139,7 @@
 
 ```./pointsTransfer <input-point-cloud> <input-triangular-mesh>```
 
-The output would be ```texture.png``` under ```C++/```
+The output would be ```texture.png``` under ```src```
 
 ## 3. Prepare for use in Unity using Blender (Open Source. Last updated for v2.79b, using defualt layout)
 
