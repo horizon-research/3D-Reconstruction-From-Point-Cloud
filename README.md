@@ -1,4 +1,4 @@
-# 3D Reconstruction From Point Cloud with Color Transfer
+# 3D Reconstruction From Point Cloud using Point-based Detail Transfer
 
 ## 1. Reconstruct Mesh from Point Cloud 
 
