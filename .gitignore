@@ -1,7 +1,6 @@
 **/.DS_Store
 
 *.json
-*.png
 *.ply
 
 C++/CMakeCache.txt
