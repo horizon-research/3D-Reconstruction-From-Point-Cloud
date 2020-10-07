@@ -21,6 +21,10 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#ifdef MULTI_THREADING
+#include <omp.h>
+#endif
+
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
 
@@ -455,8 +459,12 @@ int main(int argc, char** argv){
     double total_neighbor_search_time = 0;
     double total_triangle_draw_time = 0;
     
-    Point triangle_vertices[3];
+    #ifdef MULTI_THREADING
+    #pragma omp parallel for
+    #endif
     for(int j = 0; j < face_count; j++){
+        
+        Point triangle_vertices[3];
 
         // Find nearest points to the triangle
         std::set<Point, point_set_comparator> neighbors;
