@@ -6,8 +6,7 @@ While our system is general, we evaluate it by reconstructing [Elmina Castle](ht
 
 ## Repository structure:
 * ```src```: source code
-* ```imgs```: screenshots of rendered images to compare different existing systems and our system
-* ```videos```: video recordings from first-person perspective to compare different existing systems and our system
+* ```demolinks.md```: links to images and videos
 
 ## Instructions:
 Below is a detailed, end-to-end walk-through, reconstructing a 3D model from original point clouds and importing the model to Unity for VR rendering. It consists of four steps.
