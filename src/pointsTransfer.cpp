@@ -121,7 +121,7 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
                 texture_color.at<Vec4b>(resolution - j, i)[2] = r;
                 texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
 
-                // Compute pixel color for normal map ??? x * 255 ????
+                // Compute pixel color for normal map 
                 float nr = (CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x()) * 255;
                 float ng = (CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y()) * 255;
                 float nb = (CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z()) * 255;
@@ -518,8 +518,15 @@ int main(int argc, char** argv){
         // Create plane
         Plane_3 plane(r, p, q);
 
-        //Computer face normal ???? noramlize ??? start point
-        face_normal = plane.orthogonal_vector();
+        //Computer face normal and normalize
+        Vector_3 plane_normal = plane.orthogonal_vector();
+        double normal_length = sqrt(plane_normal.squared_length());
+        if(triangle_vertices[0] * plane_normal < 0 || triangle_vertices[1] * plane_normal < 0 || triangle_vertices[1] * plane_normal < 0){
+            face_normal = Vector_3 (-plane_normal.x()/normal_length, -plane_normal.y()/normal_length, -plane_normal.z()/normal_length);
+        }
+        else{
+            face_normal = Vector_3 (plane_normal.x()/normal_length, plane_normal.y()/normal_length, plane_normal.z()/normal_length);
+        }
         Quaternion rotation(face_normal, Vector_3(0, 0, 1));
 
         // Project to 2D
