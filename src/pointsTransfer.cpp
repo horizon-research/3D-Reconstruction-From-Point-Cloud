@@ -23,6 +23,7 @@
 
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
+#include "Quaternion.h"//Defines Quaternion
 
 #include <utility>
 #include <vector>
@@ -43,7 +44,9 @@ typedef CGAL::Point_3<Kernel>                                           Point_3;
 typedef CGAL::Triangle_2<Kernel>                                        Triangle_2;
 typedef CGAL::Triangle_3<Kernel>                                        Triangle_3;
 typedef CGAL::Plane_3<Kernel>                                           Plane_3;
+typedef CGAL::Vector_3<Kernel>                                           Vector_3;  
 typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel>   Triangle_coordinates;
+typedef CGAL::Aff_transformation_3<Kernel>                              Transform3; 
 
 typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel>       Vertex_base;
 typedef CGAL::Triangulation_data_structure_2<Vertex_base>                       Triangulation_data_structure;
@@ -59,11 +62,19 @@ Point_3 point_to_point_3(Point &p)
     return Point_3 (p.x(), p.y(), p.z());
 }
 
-void draw_triangle(Point triangle[], int resolution, Mat texture)
+void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaternion q, Mat texture_normal) // add Quaternion and texture_normal
 {
     Point_2 p(triangle[0].u() * resolution, triangle[0].v() * resolution);
     Point_2 q(triangle[1].u() * resolution, triangle[1].v() * resolution);
     Point_2 r(triangle[2].u() * resolution, triangle[2].v() * resolution);
+
+    Vector_3 normal0 (triangle[0].nx(), triangle[0].ny(), triangle[0].nz());
+    Vector_3 normal1 (triangle[1].nx(), triangle[1].ny(), triangle[1].nz());
+    Vector_3 normal2 (triangle[2].nx(), triangle[2].ny(), triangle[2].nz());
+
+    Vector_3 color0 = normal_to_color(rotate(normal0, q));
+    Vector_3 color1 = normal_to_color(rotate(normal1, q));
+    Vector_3 color2 = normal_to_color(rotate(normal2, q));
     
     CGAL::Bbox_2 bb = Triangle_2(p,q,r).bbox();
     
@@ -87,20 +98,42 @@ void draw_triangle(Point triangle[], int resolution, Mat texture)
             // If in triangle
             if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
             {
-                // Compute pixel color
+                // Compute pixel color for color map
                 float r = CGAL::to_double(bc[0]) * triangle[0].r() + CGAL::to_double(bc[1]) * triangle[1].r() + CGAL::to_double(bc[2]) * triangle[2].r();
                 float g = CGAL::to_double(bc[0]) * triangle[0].g() + CGAL::to_double(bc[1]) * triangle[1].g() + CGAL::to_double(bc[2]) * triangle[2].g();
                 float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
 
-                // Set Pixel
-                texture.at<Vec4b>(resolution - j, i)[0] = b;
-                texture.at<Vec4b>(resolution - j, i)[1] = g;
-                texture.at<Vec4b>(resolution - j, i)[2] = r;
-                texture.at<Vec4b>(resolution - j, i)[3] = 255;
+                // Set Pixel for color map
+                texture_color.at<Vec4b>(resolution - j, i)[0] = b;
+                texture_color.at<Vec4b>(resolution - j, i)[1] = g;
+                texture_color.at<Vec4b>(resolution - j, i)[2] = r;
+                texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
+
+                // Compute pixel color for normal map ??? x * 255 ????
+                float nr = CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x();
+                float ng = CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y();
+                float nb = CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z();
+
+                // Set Pixel for normal map
+                texture_normal.at<Vec4b>(resolution - j, i)[0] = nb;
+                texture_normal.at<Vec4b>(resolution - j, i)[1] = ng;
+                texture_normal.at<Vec4b>(resolution - j, i)[2] = nr;
+                texture_normal.at<Vec4b>(resolution - j, i)[3] = 255;
             }
         }
     }
 }
+
+Vector_3 normal_to_color(Vector_3 normal)
+{
+    Vector_3 color = Vector_3(0.5, 0.5, 0.5) + normal/2;
+    return color;
+}
+
+Vector_3 rotate(Vector_3 normal, Quaternion q){
+    return normal.transform(q);
+}
+
 
 int main(int argc, char** argv){
     
@@ -395,7 +428,8 @@ int main(int argc, char** argv){
 	}
     
     // Output image
-    Mat texture(RESOLUTION, RESOLUTION, CV_8UC4);
+    Mat texture_color(RESOLUTION, RESOLUTION, CV_8UC4);
+    Mat texture_normal(RESOLUTION, RESOLUTION, CV_8UC4);
 
     counter = 0;
     pos = 0;
@@ -456,6 +490,7 @@ int main(int argc, char** argv){
     double total_triangle_draw_time = 0;
     
     Point triangle_vertices[3];
+    Vector_3 face_normal;
     for(int j = 0; j < face_count; j++){
 
         // Find nearest points to the triangle
@@ -480,6 +515,12 @@ int main(int argc, char** argv){
         
         // Create plane
         Plane_3 plane(r, p, q);
+
+        //Computer face normal ???? noramlize ??? start point
+        face_normal = plane.orthogonal_vector();
+        Quaternion q (face_normal, Vector_3(0, 0, 1));
+
+
         // Project to 2D
         Point_2 r_2 = plane.to_2d(r);
         Point_2 p_2 = plane.to_2d(p);
@@ -532,7 +573,7 @@ int main(int argc, char** argv){
         if(triangulation_pts.size() == 3)
         {
             // Draw triangle
-            draw_triangle(triangle_vertices, RESOLUTION, texture);
+            draw_triangle(triangle_vertices, RESOLUTION, texture_color, q, texture_normal);
         }
         // Else triangulate
         else
@@ -568,7 +609,7 @@ int main(int argc, char** argv){
                     }
                 }
                 // Draw Triangle
-                draw_triangle(triangle, RESOLUTION, texture);
+                draw_triangle(triangle, RESOLUTION, texture_color, q, texture_normal);
             }
         }
         
@@ -582,15 +623,15 @@ int main(int argc, char** argv){
     std::cout << "Draw triangles total time: " << total_triangle_draw_time << " seconds" << std::endl;
     task_timer.reset();
     
-    // Output
+    //Output color map
     // Create dilate kernel
     Mat dilate_kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(25, 25));
     // Dilate Image
     Mat dilated;
-    dilate(texture, dilated, dilate_kernel);
+    dilate(texture_color, dilated, dilate_kernel);
     // Split into 4 channels
     Mat bgra[4];
-    split(texture, bgra);
+    split(texture_color, bgra);
     // Create alpha mask
     Mat all_alpha;
     Mat alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
@@ -602,10 +643,36 @@ int main(int argc, char** argv){
     bitwise_and(dilated, alpha_mask, edges);
     // Append edges to original
     Mat padded;
-    add(texture, edges, padded);
+    add(texture_color, edges, padded);
     // Write Image
-    cv::imwrite("texture.png", padded);
-    std::cout << "Output time: " << task_timer.time() << " seconds" << std::endl;
+    cv::imwrite("textureColor.png", padded);
+    std::cout << "Color map output time: " << task_timer.time() << " seconds" << std::endl;
+    task_timer.reset();
+
+    //Output normal map
+    // Create dilate kernel
+    Mat dilate_kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(25, 25));
+    // Dilate Image
+    Mat dilated;
+    dilate(texture_normal, dilated, dilate_kernel);
+    // Split into 4 channels
+    Mat bgra[4];
+    split(texture_normal, bgra);
+    // Create alpha mask
+    Mat all_alpha;
+    Mat alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
+    merge(alphas, 4, all_alpha);
+    Mat alpha_mask;
+    bitwise_not(all_alpha, alpha_mask);
+    // Extract dilated edges
+    Mat edges;
+    bitwise_and(dilated, alpha_mask, edges);
+    // Append edges to original
+    Mat padded;
+    add(texture_normal, edges, padded);
+    // Write Image
+    cv::imwrite("textureNormal.png", padded);
+    std::cout << "Normal map output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
     std::cout << "Total real time: " << real_total_timer.time() << " seconds" << std::endl;
