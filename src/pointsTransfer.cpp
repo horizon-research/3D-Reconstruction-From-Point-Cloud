@@ -521,7 +521,9 @@ int main(int argc, char** argv){
         //Computer face normal and normalize
         Vector_3 plane_normal = plane.orthogonal_vector();
         double normal_length = sqrt(plane_normal.squared_length());
-        if(triangle_vertices[0] * plane_normal < 0 || triangle_vertices[1] * plane_normal < 0 || triangle_vertices[1] * plane_normal < 0){
+        if(triangle_vertices[0].nx() * plane_normal.x() + triangle_vertices[0].ny() * plane_normal.y() + triangle_vertices[0].nz() * plane_normal.z()< 0 
+            || triangle_vertices[1].nx() * plane_normal.x() + triangle_vertices[1].ny() * plane_normal.y() + triangle_vertices[1].nz() * plane_normal.z()< 0 
+            || triangle_vertices[2].nx() * plane_normal.x() + triangle_vertices[2].ny() * plane_normal.y() + triangle_vertices[2].nz() * plane_normal.z()< 0){
             face_normal = Vector_3 (-plane_normal.x()/normal_length, -plane_normal.y()/normal_length, -plane_normal.z()/normal_length);
         }
         else{
