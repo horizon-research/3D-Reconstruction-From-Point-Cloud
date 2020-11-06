@@ -57,6 +57,8 @@ typedef Delaunay::Finite_faces_iterator                                         
 
 typedef cv::Mat     Mat;
 typedef cv::Vec4b   Vec4b;
+typedef cv::Vec3b   Vec3b;
+typedef cv::Scalar Scalar_cv;
 
 Point_3 point_to_point_3(Point &p)
 {
@@ -65,7 +67,7 @@ Point_3 point_to_point_3(Point &p)
 
 Vector_3 normal_to_color(Vector_3 normal)
 {
-    Vector_3 color = Vector_3(0.5, 0.5, 0.5) + normal/2;
+    Vector_3 color = Vector_3(0.5, 0.5, 0.5) - normal/2;
     return color;
 }
 
@@ -76,19 +78,35 @@ Vector_3 rotate(Vector_3 normal, Quaternion q){
 
 void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaternion rotation, Mat texture_normal) // add Quaternion and texture_normal
 {
-    Point_2 p(triangle[0].u() * resolution, triangle[0].v() * resolution);
-    Point_2 q(triangle[1].u() * resolution, triangle[1].v() * resolution);
-    Point_2 r(triangle[2].u() * resolution, triangle[2].v() * resolution);
+    Point_2 p_2(triangle[0].u() * resolution, triangle[0].v() * resolution);
+    Point_2 q_2(triangle[1].u() * resolution, triangle[1].v() * resolution);
+    Point_2 r_2(triangle[2].u() * resolution, triangle[2].v() * resolution);
 
-    Vector_3 normal0 (triangle[0].nx(), triangle[0].ny(), triangle[0].nz());
-    Vector_3 normal1 (triangle[1].nx(), triangle[1].ny(), triangle[1].nz());
-    Vector_3 normal2 (triangle[2].nx(), triangle[2].ny(), triangle[2].nz());
-
-    Vector_3 color0 = normal_to_color(rotate(normal0, rotation));
-    Vector_3 color1 = normal_to_color(rotate(normal1, rotation));
-    Vector_3 color2 = normal_to_color(rotate(normal2, rotation));
+    // Create CGAL Point_3 of triangle vertices
+    Point_3 r = point_to_point_3(triangle[0]);
+    Point_3 p = point_to_point_3(triangle[1]);
+    Point_3 q = point_to_point_3(triangle[2]);
     
-    CGAL::Bbox_2 bb = Triangle_2(p,q,r).bbox();
+    // Create plane
+    Plane_3 plane(r, p, q);
+
+    Vector_3 triangle_normal;
+
+    //Computer triangle normal and normalize
+    Vector_3 plane_normal = plane.orthogonal_vector();
+    double normal_length = sqrt(plane_normal.squared_length());
+    if((triangle[0].nx() * plane_normal.x() + triangle[0].ny() * plane_normal.y() + triangle[0].nz() * plane_normal.z() < 0)
+        || (triangle[1].nx() * plane_normal.x() + triangle[1].ny() * plane_normal.y() + triangle[1].nz() * plane_normal.z()< 0) 
+        || (triangle[2].nx() * plane_normal.x() + triangle[2].ny() * plane_normal.y() + triangle[2].nz() * plane_normal.z()< 0)){
+        triangle_normal = Vector_3 (-plane_normal.x()/normal_length, -plane_normal.y()/normal_length, -plane_normal.z()/normal_length);
+    }
+    else{
+        triangle_normal = Vector_3 (plane_normal.x()/normal_length, plane_normal.y()/normal_length, plane_normal.z()/normal_length);
+    }
+
+    Vector_3 color = normal_to_color(rotate(triangle_normal, rotation));
+    
+    CGAL::Bbox_2 bb = Triangle_2(p_2,q_2,r_2).bbox();
     
     // Triangle Rasterization
     // For each pixel in bounding box
@@ -103,7 +121,7 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
             if(y >= resolution){ y = resolution - 1; }
             
             // Compute barycentric coordiates
-            Triangle_coordinates triangle_coordinates(p, q, r);
+            Triangle_coordinates triangle_coordinates(p_2, q_2, r_2);
             std::vector<Scalar> bc;
             triangle_coordinates(Point_2(x,y), bc);
             
@@ -121,16 +139,67 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
                 texture_color.at<Vec4b>(resolution - j, i)[2] = r;
                 texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
 
-                // Compute pixel color for normal map 
-                float nr = (CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x()) * 255;
-                float ng = (CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y()) * 255;
-                float nb = (CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z()) * 255;
+                // // Compute pixel color for normal map 
+                // float nr = (CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x()) * 255;
+                // float ng = (CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y()) * 255;
+                // float nb = (CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z()) * 255;
+                float nr = color.x() * 255;
+                float ng = color.y() * 255;
+                float nb = color.z() * 255;
 
                 // Set Pixel for normal map
-                texture_normal.at<Vec4b>(resolution - j, i)[0] = nb;
-                texture_normal.at<Vec4b>(resolution - j, i)[1] = ng;
-                texture_normal.at<Vec4b>(resolution - j, i)[2] = nr;
-                texture_normal.at<Vec4b>(resolution - j, i)[3] = 255;
+                texture_normal.at<Vec3b>(resolution - j, i)[0] = nb;
+                texture_normal.at<Vec3b>(resolution - j, i)[1] = ng;
+                texture_normal.at<Vec3b>(resolution - j, i)[2] = nr;
+            }
+        }
+    }
+}
+
+void draw_triangle(Point triangle[], int resolution, Mat texture_color, Mat texture_normal) // add Quaternion and texture_normal
+{
+    Point_2 p_2(triangle[0].u() * resolution, triangle[0].v() * resolution);
+    Point_2 q_2(triangle[1].u() * resolution, triangle[1].v() * resolution);
+    Point_2 r_2(triangle[2].u() * resolution, triangle[2].v() * resolution);
+    
+    CGAL::Bbox_2 bb = Triangle_2(p_2,q_2,r_2).bbox();
+    
+    // Triangle Rasterization
+    // For each pixel in bounding box
+    for(int i = (int)std::floor(bb.xmin()); i <= std::floor(bb.xmax()); i++)
+    {
+        for(int j = (int)std::floor(bb.ymin()); j <= std::floor(bb.ymax()); j++)
+        {
+            int x = i;
+            int y = j;
+            // Boundary check
+            if(x >= resolution){ x = resolution - 1; }
+            if(y >= resolution){ y = resolution - 1; }
+            
+            // Compute barycentric coordiates
+            Triangle_coordinates triangle_coordinates(p_2, q_2, r_2);
+            std::vector<Scalar> bc;
+            triangle_coordinates(Point_2(x,y), bc);
+            
+            // If in triangle
+            if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
+            {
+                // Compute pixel color for color map
+                float r = CGAL::to_double(bc[0]) * triangle[0].r() + CGAL::to_double(bc[1]) * triangle[1].r() + CGAL::to_double(bc[2]) * triangle[2].r();
+                float g = CGAL::to_double(bc[0]) * triangle[0].g() + CGAL::to_double(bc[1]) * triangle[1].g() + CGAL::to_double(bc[2]) * triangle[2].g();
+                float b = CGAL::to_double(bc[0]) * triangle[0].b() + CGAL::to_double(bc[1]) * triangle[1].b() + CGAL::to_double(bc[2]) * triangle[2].b();
+
+                // Set Pixel for color map
+                texture_color.at<Vec4b>(resolution - j, i)[0] = b;
+                texture_color.at<Vec4b>(resolution - j, i)[1] = g;
+                texture_color.at<Vec4b>(resolution - j, i)[2] = r;
+                texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
+
+                // // Set Pixel for normal map
+                // texture_normal.at<Vec4b>(resolution - j, i)[0] = 255;
+                // texture_normal.at<Vec4b>(resolution - j, i)[1] = 128;
+                // texture_normal.at<Vec4b>(resolution - j, i)[2] = 128;
+                // texture_normal.at<Vec4b>(resolution - j, i)[3] = 255;
             }
         }
     }
@@ -431,7 +500,15 @@ int main(int argc, char** argv){
     
     // Output image
     Mat texture_color(RESOLUTION, RESOLUTION, CV_8UC4);
-    Mat texture_normal(RESOLUTION, RESOLUTION, CV_8UC4);
+    Mat texture_normal(RESOLUTION, RESOLUTION, CV_8UC3);
+
+    for(int u1 = 0; u1 < RESOLUTION; u1++){
+        for(int v1 = 0; v1 < RESOLUTION; v1++){
+            texture_normal.at<Vec3b>(v1, u1)[0] = 255;
+            texture_normal.at<Vec3b>(v1, u1)[1] = 128;
+            texture_normal.at<Vec3b>(v1, u1)[2] = 128;
+        }
+    }
 
     counter = 0;
     pos = 0;
@@ -521,9 +598,9 @@ int main(int argc, char** argv){
         //Computer face normal and normalize
         Vector_3 plane_normal = plane.orthogonal_vector();
         double normal_length = sqrt(plane_normal.squared_length());
-        if(triangle_vertices[0].nx() * plane_normal.x() + triangle_vertices[0].ny() * plane_normal.y() + triangle_vertices[0].nz() * plane_normal.z()< 0 
-            || triangle_vertices[1].nx() * plane_normal.x() + triangle_vertices[1].ny() * plane_normal.y() + triangle_vertices[1].nz() * plane_normal.z()< 0 
-            || triangle_vertices[2].nx() * plane_normal.x() + triangle_vertices[2].ny() * plane_normal.y() + triangle_vertices[2].nz() * plane_normal.z()< 0){
+        if((triangle_vertices[0].nx() * plane_normal.x() + triangle_vertices[0].ny() * plane_normal.y() + triangle_vertices[0].nz() * plane_normal.z() < 0)
+            || (triangle_vertices[1].nx() * plane_normal.x() + triangle_vertices[1].ny() * plane_normal.y() + triangle_vertices[1].nz() * plane_normal.z()< 0) 
+            || (triangle_vertices[2].nx() * plane_normal.x() + triangle_vertices[2].ny() * plane_normal.y() + triangle_vertices[2].nz() * plane_normal.z()< 0)){
             face_normal = Vector_3 (-plane_normal.x()/normal_length, -plane_normal.y()/normal_length, -plane_normal.z()/normal_length);
         }
         else{
@@ -583,7 +660,7 @@ int main(int argc, char** argv){
         if(triangulation_pts.size() == 3)
         {
             // Draw triangle
-            draw_triangle(triangle_vertices, RESOLUTION, texture_color, rotation, texture_normal);
+            draw_triangle(triangle_vertices, RESOLUTION, texture_color, texture_normal);
         }
         // Else triangulate
         else
@@ -660,20 +737,8 @@ int main(int argc, char** argv){
     task_timer.reset();
 
     //Output normal map
-    // Dilate Image
-    dilate(texture_normal, dilated, dilate_kernel);
-    // Split into 4 channels
-    split(texture_normal, bgra);
-    // Create alpha mask
-    Mat normal_alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
-    merge(normal_alphas, 4, all_alpha);
-    bitwise_not(all_alpha, alpha_mask);
-    // Extract dilated edges
-    bitwise_and(dilated, alpha_mask, edges);
-    // Append edges to original
-    add(texture_normal, edges, padded);
     // Write Image
-    cv::imwrite("textureNormal.png", padded);
+    cv::imwrite("textureNormal.png", texture_normal);
     std::cout << "Normal map output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
