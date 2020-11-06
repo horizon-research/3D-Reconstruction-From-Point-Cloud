@@ -139,10 +139,7 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
                 texture_color.at<Vec4b>(resolution - j, i)[2] = r;
                 texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
 
-                // // Compute pixel color for normal map 
-                // float nr = (CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x()) * 255;
-                // float ng = (CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y()) * 255;
-                // float nb = (CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z()) * 255;
+                // Compute pixel color for normal map 
                 float nr = color.x() * 255;
                 float ng = color.y() * 255;
                 float nb = color.z() * 255;
@@ -195,11 +192,6 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Mat text
                 texture_color.at<Vec4b>(resolution - j, i)[2] = r;
                 texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
 
-                // // Set Pixel for normal map
-                // texture_normal.at<Vec4b>(resolution - j, i)[0] = 255;
-                // texture_normal.at<Vec4b>(resolution - j, i)[1] = 128;
-                // texture_normal.at<Vec4b>(resolution - j, i)[2] = 128;
-                // texture_normal.at<Vec4b>(resolution - j, i)[3] = 255;
             }
         }
     }
