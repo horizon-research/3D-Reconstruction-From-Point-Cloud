@@ -500,15 +500,7 @@ int main(int argc, char** argv){
     
     // Output image
     Mat texture_color(RESOLUTION, RESOLUTION, CV_8UC4);
-    Mat texture_normal(RESOLUTION, RESOLUTION, CV_8UC3);
-
-    for(int u1 = 0; u1 < RESOLUTION; u1++){
-        for(int v1 = 0; v1 < RESOLUTION; v1++){
-            texture_normal.at<Vec3b>(v1, u1)[0] = 255;
-            texture_normal.at<Vec3b>(v1, u1)[1] = 128;
-            texture_normal.at<Vec3b>(v1, u1)[2] = 128;
-        }
-    }
+    Mat texture_normal(RESOLUTION, RESOLUTION, CV_8UC3, Scalar_cv(255, 128, 128));
 
     counter = 0;
     pos = 0;
