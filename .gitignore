@@ -3,11 +3,10 @@
 *.json
 *.ply
 
-**/*.png
-
-C++/CMakeCache.txt
-C++/CMakeFiles
-C++/cmake_install.cmake
-C++/Makefile
-C++/pointsTransfer
+src/CMakeCache.txt
+src/CMakeFiles
+src/cmake_install.cmake
+src/Makefile
+src/pointsTransfer
+src/*.png
 
