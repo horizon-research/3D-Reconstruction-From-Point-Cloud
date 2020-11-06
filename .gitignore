@@ -3,6 +3,8 @@
 *.json
 *.ply
 
+**/*.png
+
 C++/CMakeCache.txt
 C++/CMakeFiles
 C++/cmake_install.cmake

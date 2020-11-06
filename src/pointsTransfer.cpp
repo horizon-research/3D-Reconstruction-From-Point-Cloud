@@ -23,7 +23,6 @@
 
 #include "Point.h"  // Defines type Point, Construct_coord_iterator
 #include "Distance.h"
-#include "Quaternion.h"//Defines Quaternion
 
 #include <utility>
 #include <vector>
@@ -48,6 +47,8 @@ typedef CGAL::Vector_3<Kernel>                                           Vector_
 typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel>   Triangle_coordinates;
 typedef CGAL::Aff_transformation_3<Kernel>                              Transform3; 
 
+#include "Quaternion.h"//Defines Quaternion
+
 typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel>       Vertex_base;
 typedef CGAL::Triangulation_data_structure_2<Vertex_base>                       Triangulation_data_structure;
 typedef CGAL::Delaunay_triangulation_2<Kernel, Triangulation_data_structure>    Delaunay;
@@ -62,7 +63,18 @@ Point_3 point_to_point_3(Point &p)
     return Point_3 (p.x(), p.y(), p.z());
 }
 
-void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaternion q, Mat texture_normal) // add Quaternion and texture_normal
+Vector_3 normal_to_color(Vector_3 normal)
+{
+    Vector_3 color = Vector_3(0.5, 0.5, 0.5) + normal/2;
+    return color;
+}
+
+Vector_3 rotate(Vector_3 normal, Quaternion q){
+    Transform3 tf = q.translate();
+    return normal.transform(tf);
+}
+
+void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaternion rotation, Mat texture_normal) // add Quaternion and texture_normal
 {
     Point_2 p(triangle[0].u() * resolution, triangle[0].v() * resolution);
     Point_2 q(triangle[1].u() * resolution, triangle[1].v() * resolution);
@@ -72,9 +84,9 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
     Vector_3 normal1 (triangle[1].nx(), triangle[1].ny(), triangle[1].nz());
     Vector_3 normal2 (triangle[2].nx(), triangle[2].ny(), triangle[2].nz());
 
-    Vector_3 color0 = normal_to_color(rotate(normal0, q));
-    Vector_3 color1 = normal_to_color(rotate(normal1, q));
-    Vector_3 color2 = normal_to_color(rotate(normal2, q));
+    Vector_3 color0 = normal_to_color(rotate(normal0, rotation));
+    Vector_3 color1 = normal_to_color(rotate(normal1, rotation));
+    Vector_3 color2 = normal_to_color(rotate(normal2, rotation));
     
     CGAL::Bbox_2 bb = Triangle_2(p,q,r).bbox();
     
@@ -110,9 +122,9 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
                 texture_color.at<Vec4b>(resolution - j, i)[3] = 255;
 
                 // Compute pixel color for normal map ??? x * 255 ????
-                float nr = CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x();
-                float ng = CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y();
-                float nb = CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z();
+                float nr = (CGAL::to_double(bc[0]) * color0.x() + CGAL::to_double(bc[1]) * color1.x() + CGAL::to_double(bc[2]) * color2.x()) * 255;
+                float ng = (CGAL::to_double(bc[0]) * color0.y() + CGAL::to_double(bc[1]) * color1.y() + CGAL::to_double(bc[2]) * color2.y()) * 255;
+                float nb = (CGAL::to_double(bc[0]) * color0.z() + CGAL::to_double(bc[1]) * color1.z() + CGAL::to_double(bc[2]) * color2.z()) * 255;
 
                 // Set Pixel for normal map
                 texture_normal.at<Vec4b>(resolution - j, i)[0] = nb;
@@ -122,16 +134,6 @@ void draw_triangle(Point triangle[], int resolution, Mat texture_color, Quaterni
             }
         }
     }
-}
-
-Vector_3 normal_to_color(Vector_3 normal)
-{
-    Vector_3 color = Vector_3(0.5, 0.5, 0.5) + normal/2;
-    return color;
-}
-
-Vector_3 rotate(Vector_3 normal, Quaternion q){
-    return normal.transform(q);
 }
 
 
@@ -518,8 +520,7 @@ int main(int argc, char** argv){
 
         //Computer face normal ???? noramlize ??? start point
         face_normal = plane.orthogonal_vector();
-        Quaternion q (face_normal, Vector_3(0, 0, 1));
-
+        Quaternion rotation(face_normal, Vector_3(0, 0, 1));
 
         // Project to 2D
         Point_2 r_2 = plane.to_2d(r);
@@ -573,7 +574,7 @@ int main(int argc, char** argv){
         if(triangulation_pts.size() == 3)
         {
             // Draw triangle
-            draw_triangle(triangle_vertices, RESOLUTION, texture_color, q, texture_normal);
+            draw_triangle(triangle_vertices, RESOLUTION, texture_color, rotation, texture_normal);
         }
         // Else triangulate
         else
@@ -609,7 +610,7 @@ int main(int argc, char** argv){
                     }
                 }
                 // Draw Triangle
-                draw_triangle(triangle, RESOLUTION, texture_color, q, texture_normal);
+                draw_triangle(triangle, RESOLUTION, texture_color, rotation, texture_normal);
             }
         }
         
@@ -634,8 +635,8 @@ int main(int argc, char** argv){
     split(texture_color, bgra);
     // Create alpha mask
     Mat all_alpha;
-    Mat alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
-    merge(alphas, 4, all_alpha);
+    Mat color_alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
+    merge(color_alphas, 4, all_alpha);
     Mat alpha_mask;
     bitwise_not(all_alpha, alpha_mask);
     // Extract dilated edges
@@ -650,25 +651,17 @@ int main(int argc, char** argv){
     task_timer.reset();
 
     //Output normal map
-    // Create dilate kernel
-    Mat dilate_kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(25, 25));
     // Dilate Image
-    Mat dilated;
     dilate(texture_normal, dilated, dilate_kernel);
     // Split into 4 channels
-    Mat bgra[4];
     split(texture_normal, bgra);
     // Create alpha mask
-    Mat all_alpha;
-    Mat alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
-    merge(alphas, 4, all_alpha);
-    Mat alpha_mask;
+    Mat normal_alphas[4] = {bgra[3], bgra[3], bgra[3], bgra[3]};
+    merge(normal_alphas, 4, all_alpha);
     bitwise_not(all_alpha, alpha_mask);
     // Extract dilated edges
-    Mat edges;
     bitwise_and(dilated, alpha_mask, edges);
     // Append edges to original
-    Mat padded;
     add(texture_normal, edges, padded);
     // Write Image
     cv::imwrite("textureNormal.png", padded);
