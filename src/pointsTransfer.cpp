@@ -58,7 +58,7 @@ typedef Delaunay::Finite_faces_iterator                                         
 typedef cv::Mat     Mat;
 typedef cv::Vec4b   Vec4b;
 typedef cv::Vec3b   Vec3b;
-typedef cv::Scalar Scalar_cv;
+typedef cv::Scalar  Scalar_cv;
 
 Point_3 point_to_point_3(Point &p)
 {
@@ -552,6 +552,9 @@ int main(int argc, char** argv){
     double total_neighbor_search_time = 0;
     double total_triangle_draw_time = 0;
     
+    // Collect count of extra faces added by triangulation
+    int num_extra_faces = 0;
+    
     Point triangle_vertices[3];
     Vector_3 face_normal;
     for(int j = 0; j < face_count; j++){
@@ -567,7 +570,7 @@ int main(int argc, char** argv){
                 neighbors.insert(it->first);
             }
         }
-        
+
         total_neighbor_search_time += task_timer.time();
         task_timer.reset();
         
@@ -616,20 +619,20 @@ int main(int argc, char** argv){
         {
             // Get neighboring point
             Point n_point = *it;
-            
+
             // Get CGAL Point_3 of point
             Point_3 n_point_3 = point_to_point_3(n_point);
-            
+
             // Find orthogonal projection of point onto plane
             Point_3 n_proj_point_3 = plane.projection(n_point_3);
-            
+
             // Projected point to 2D
             Point_2 n_point_2 = plane.to_2d(n_proj_point_3);
-            
+
             // Compute Barycentric Coordinate
             std::vector<Scalar> bc;
             triangle_coordinates(n_point_2, bc);
-            
+
             // Check if point in triangle
             if(bc[0] >= 0 && bc[1] >= 0 && bc[2] >= 0)
             {
@@ -655,6 +658,8 @@ int main(int argc, char** argv){
             // For each face
             for(Finite_faces_iterator it = delaunay.finite_faces_begin(); it != delaunay.finite_faces_end(); it++)
             {
+                num_extra_faces++;
+                
                 Point triangle[3];
                 for(int i = 0; i < 3; i++)
                 {
@@ -694,7 +699,9 @@ int main(int argc, char** argv){
     std::cout << "Draw triangles total time: " << total_triangle_draw_time << " seconds" << std::endl;
     task_timer.reset();
     
-    //Output color map
+    std::cout << "Extra faces created by triangulation: " << num_extra_faces << std::endl;
+    
+    // Output color map
     // Create dilate kernel
     Mat dilate_kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(25, 25));
     // Dilate Image
@@ -717,13 +724,36 @@ int main(int argc, char** argv){
     add(texture_color, edges, padded);
     // Write Image
     cv::imwrite("textureColor.png", padded);
+//    // Gaussian Blur
+//    Mat texture_gaussian;
+//    GaussianBlur(padded, texture_gaussian, cv::Size(999,999), 0);
+//    cv::imwrite("MeshLabCTG999x1.png", texture_gaussian);
     std::cout << "Color map output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
-    //Output normal map
-    // Write Image
+    // Output normal map
+//    // Gaussian Blur x1
+//    Mat norm_gaussianx1;
+//    GaussianBlur(texture_normal, norm_gaussianx1, cv::Size(7, 7), 0);
+//    // Write 1 iteration
+//    cv::imwrite("MeshLabNTG7x1.png", norm_gaussianx1);
+//    // Gaussian Blur x2
+//    Mat norm_gaussianx2;
+//    GaussianBlur(norm_gaussianx1, norm_gaussianx2, cv::Size(7, 7), 0);
+//    // Write 2 iteration
+//    cv::imwrite("MeshLabNTG7x2.png", norm_gaussianx2);
+//    // Gaussian Blur x3
+//    Mat norm_gaussianx3;
+//    GaussianBlur(norm_gaussianx2, norm_gaussianx3, cv::Size(7, 7), 0);
+//    // Write 3 iteration
+//    cv::imwrite("MeshLabNTG7x3.png", norm_gaussianx3);
+//    // Gaussian Blur
+//    Mat norm_gaussian;
+//    GaussianBlur(texture_normal, norm_gaussian, cv::Size(999, 999), 0);
+//    // Write Image
+//    cv::imwrite("MeshLabNTG999x1.png", norm_gaussian);
+//    std::cout << "Normal map output time: " << task_timer.time() << " seconds" << std::endl;
     cv::imwrite("textureNormal.png", texture_normal);
-    std::cout << "Normal map output time: " << task_timer.time() << " seconds" << std::endl;
     task_timer.reset();
 
     std::cout << "Total real time: " << real_total_timer.time() << " seconds" << std::endl;
