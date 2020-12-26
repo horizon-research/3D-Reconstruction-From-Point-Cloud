@@ -30,6 +30,8 @@
 #include <iostream>
 #include <string>
 
+#include <math.h>
+
 typedef CGAL::Dimension_tag<3>                                                          D;
 typedef CGAL::Search_traits<double, Point, const double*, Construct_coord_iterator, D>  Traits;
 typedef CGAL::Orthogonal_k_neighbor_search<Traits, Distance>                            K_neighbor_search;
@@ -43,7 +45,7 @@ typedef CGAL::Point_3<Kernel>                                           Point_3;
 typedef CGAL::Triangle_2<Kernel>                                        Triangle_2;
 typedef CGAL::Triangle_3<Kernel>                                        Triangle_3;
 typedef CGAL::Plane_3<Kernel>                                           Plane_3;
-typedef CGAL::Vector_3<Kernel>                                           Vector_3;  
+typedef CGAL::Vector_3<Kernel>                                          Vector_3;
 typedef CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel>   Triangle_coordinates;
 typedef CGAL::Aff_transformation_3<Kernel>                              Transform3; 
 
@@ -63,6 +65,19 @@ typedef cv::Scalar  Scalar_cv;
 Point_3 point_to_point_3(Point &p)
 {
     return Point_3 (p.x(), p.y(), p.z());
+}
+
+Vector_3 point_to_vector_3(Point &p)
+{
+    return Vector_3 (p.x(), p.y(), p.z());
+}
+
+float point_to_point_sqaured_dist(Point &p1, Point &p2)
+{
+    double distx = p1.x() - p2.x();
+    double disty = p1.y() - p2.y();
+    double distz = p1.z() - p2.z();
+    return distx*distx+disty*disty+distz*distz;
 }
 
 Vector_3 normal_to_color(Vector_3 normal)
@@ -219,6 +234,10 @@ int main(int argc, char** argv){
     const int N = 1000;
     const unsigned int K = 20; // Search range
     const int RESOLUTION = 8192;
+    
+    // Criteria for filtering PC points to be drawn
+    const float max_squared_dist = 4.0;
+    const float max_normal_angle = 45.0 / 180 * M_PI;
 
     CGAL::Timer task_timer; task_timer.start();
     CGAL::Real_timer real_total_timer; real_total_timer.start();
@@ -554,6 +573,10 @@ int main(int argc, char** argv){
     
     // Collect count of extra faces added by triangulation
     int num_extra_faces = 0;
+    // Collect count of points accepted, rejected and drawn
+    int pc_points_acc = 0;
+    int pc_points_rej = 0;
+    int pc_points_drawn = 0;
     
     Point triangle_vertices[3];
     Vector_3 face_normal;
@@ -567,7 +590,20 @@ int main(int argc, char** argv){
             K_neighbor_search search(tree, triangle_vertices[i], K);
             for(K_neighbor_search::iterator it = search.begin(); it != search.end(); it++)
             {
-                neighbors.insert(it->first);
+                Point p = it->first;
+                // Point filtering by distance
+                if(point_to_point_sqaured_dist(p, triangle_vertices[i]) > max_squared_dist){
+                    pc_points_rej++;
+                    continue;
+                }
+                // Point filtering by normal
+                if(angle(point_to_vector_3(p), point_to_vector_3(triangle_vertices[i])) > max_normal_angle){
+                    pc_points_rej++;
+                    continue;
+                }
+                // Otherwise add to neighbors list
+                neighbors.insert(p);
+                pc_points_acc++;
             }
         }
 
@@ -640,6 +676,7 @@ int main(int argc, char** argv){
                 pts_in_tri.push_back(n_point);
                 pts_bc_in_tri.push_back(bc);
                 triangulation_pts.push_back(std::make_pair(n_point_2, triangulation_index++));
+                pc_points_drawn++;
             }
         }
         
@@ -700,6 +737,10 @@ int main(int argc, char** argv){
     task_timer.reset();
     
     std::cout << "Extra faces created by triangulation: " << num_extra_faces << std::endl;
+    
+    std::cout << "Points from PC considered: " << pc_points_acc << std::endl;
+    std::cout << "Points from PC rejected: " << pc_points_rej << std::endl;
+    std::cout << "Points from PC drawn: " << pc_points_drawn << std::endl;
     
     // Output color map
     // Create dilate kernel
