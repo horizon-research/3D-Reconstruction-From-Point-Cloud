@@ -67,9 +67,9 @@ Point_3 point_to_point_3(Point &p)
     return Point_3 (p.x(), p.y(), p.z());
 }
 
-Vector_3 point_to_vector_3(Point &p)
+Vector_3 get_point_normal(Point &p)
 {
-    return Vector_3 (p.x(), p.y(), p.z());
+    return Vector_3 (p.nx(), p.ny(), p.nz());
 }
 
 float point_to_point_sqaured_dist(Point &p1, Point &p2)
@@ -575,7 +575,8 @@ int main(int argc, char** argv){
     int num_extra_faces = 0;
     // Collect count of points accepted, rejected and drawn
     int pc_points_acc = 0;
-    int pc_points_rej = 0;
+    int pc_points_dist_rej = 0;
+    int pc_points_norm_rej = 0;
     int pc_points_drawn = 0;
     
     Point triangle_vertices[3];
@@ -593,12 +594,12 @@ int main(int argc, char** argv){
                 Point p = it->first;
                 // Point filtering by distance
                 if(point_to_point_sqaured_dist(p, triangle_vertices[i]) > max_squared_dist){
-                    pc_points_rej++;
+                    pc_points_dist_rej++;
                     continue;
                 }
                 // Point filtering by normal
-                if(angle(point_to_vector_3(p), point_to_vector_3(triangle_vertices[i])) > max_normal_angle){
-                    pc_points_rej++;
+                if(angle(get_point_normal(p), get_point_normal(triangle_vertices[i])) > max_normal_angle){
+                    pc_points_norm_rej++;
                     continue;
                 }
                 // Otherwise add to neighbors list
@@ -739,7 +740,8 @@ int main(int argc, char** argv){
     std::cout << "Extra faces created by triangulation: " << num_extra_faces << std::endl;
     
     std::cout << "Points from PC considered: " << pc_points_acc << std::endl;
-    std::cout << "Points from PC rejected: " << pc_points_rej << std::endl;
+    std::cout << "Points from PC rejected by distance: " << pc_points_dist_rej << std::endl;
+    std::cout << "Points from PC rejected by normal: " << pc_points_norm_rej << std::endl;
     std::cout << "Points from PC drawn: " << pc_points_drawn << std::endl;
     
     // Output color map
