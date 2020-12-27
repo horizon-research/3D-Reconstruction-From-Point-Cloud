@@ -593,12 +593,14 @@ int main(int argc, char** argv){
             {
                 Point p = it->first;
                 // Point filtering by distance
-                if(point_to_point_sqaured_dist(p, triangle_vertices[i]) > max_squared_dist){
+                if(point_to_point_sqaured_dist(p, triangle_vertices[i]) > max_squared_dist)
+                {
                     pc_points_dist_rej++;
                     continue;
                 }
                 // Point filtering by normal
-                if(angle(get_point_normal(p), get_point_normal(triangle_vertices[i])) > max_normal_angle){
+                if(angle(get_point_normal(p), get_point_normal(triangle_vertices[i])) > max_normal_angle)
+                {
                     pc_points_norm_rej++;
                     continue;
                 }
