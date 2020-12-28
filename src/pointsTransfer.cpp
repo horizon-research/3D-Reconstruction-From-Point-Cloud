@@ -29,6 +29,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 #include <math.h>
 
@@ -599,8 +600,10 @@ int main(int argc, char** argv){
                     continue;
                 }
                 // Point filtering by normal
-                if(angle(get_point_normal(p), get_point_normal(triangle_vertices[i])) > max_normal_angle)
+                float angle = std::abs(angle(get_point_normal(p), get_point_normal(triangle_vertices[i])))
+                if(angle > max_normal_angle)
                 {
+                    std::cout << angle << " < " << max_normal_angle << std::endl;
                     pc_points_norm_rej++;
                     continue;
                 }
